@@ -15,7 +15,7 @@
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 
 <script type="application/ld+json">
@@ -31,11 +31,26 @@
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="markGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22E5C9"/>
+      <stop offset="100%" stop-color="#9A5CFF"/>
+    </linearGradient>
+  </defs>
+</svg>
+
 <div class="titleblock" id="titleblock"></div>
 
 <nav class="nav">
   <div class="wrap">
-    <div class="nav-mark" id="nav-mark"></div>
+    <div class="nav-mark">
+      <svg class="mark-badge" viewBox="0 0 44 44" aria-hidden="true">
+        <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" />
+        <text x="22" y="28" text-anchor="middle">R</text>
+      </svg>
+      <span id="nav-mark-text"></span>
+    </div>
     <ul class="nav-links">
       <li><a href="#about">About</a></li>
       <li><a href="#skills">Skills</a></li>
