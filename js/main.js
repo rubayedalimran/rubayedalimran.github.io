@@ -23,7 +23,7 @@ function el(tag, cls, html) {
 }
 
 function renderNavAndHero() {
-  document.getElementById("nav-mark").innerHTML = `${SITE.name.split(" ")[0]}<span>.</span>`;
+  document.getElementById("nav-mark-text").textContent = SITE.name.split(" ")[0].toUpperCase();
   document.getElementById("hero-name").textContent = SITE.name;
   document.getElementById("hero-role").textContent = SITE.role;
   document.getElementById("hero-statement").textContent = SITE.heroStatement;
