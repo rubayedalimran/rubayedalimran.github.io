@@ -1,1 +1,0 @@
-Drop this project's photos/CAD renders/videos in this folder, then reference them in js/data.js. See CONTENT-GUIDE.md in the project root.
