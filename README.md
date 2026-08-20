@@ -1,4 +1,4 @@
-# Raiyan Islam — Portfolio
+# Portfolio
 
 A dark, "engineered in red & gold" mechanical-engineering portfolio. Pure
 HTML/CSS/JS — no build step, no framework, no backend. Deploys anywhere
