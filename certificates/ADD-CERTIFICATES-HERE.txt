@@ -1,1 +1,0 @@
-Optional: store certificate PDFs/images here if you want to link to them from the 'link' field of an entry in the CERTIFICATIONS array in js/data.js.
