@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (seen) {
       bootScreen.classList.add('boot-hidden');
+      window.requestIdleCallback ? window.requestIdleCallback(initReactor3D) : setTimeout(initReactor3D, 200);
       return;
     }
 
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           bootScreen.classList.add('boot-hidden');
           sessionStorage.setItem('bootSeen', '1');
+          window.requestIdleCallback ? window.requestIdleCallback(initReactor3D) : setTimeout(initReactor3D, 200);
         }, 400);
       }
     }, 60);
@@ -253,18 +255,177 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.5 });
     counters.forEach(c => counterObserver.observe(c));
 
-    // arc reactor click easter egg
+    // arc reactor click easter egg — shared between the SVG fallback and
+    // the 3D reactor (see initReactor3D), so the overload counter/caption
+    // stays correct no matter which visual is active.
     const reactor = document.getElementById('hero-reactor');
-    let clicks = 0;
     reactor.addEventListener('click', () => {
       reactor.classList.remove('overcharged');
       void reactor.offsetWidth; // restart animation
       reactor.classList.add('overcharged');
-      clicks++;
-      if (clicks === 5) {
-        document.querySelector('.reactor-caption').textContent = 'REACTOR OVERLOAD — NICE.';
-      }
+      handleReactorClick();
     });
+  }
+
+  let reactorClickCount = 0;
+  function handleReactorClick() {
+    reactorClickCount++;
+    if (reactorClickCount === 5) {
+      const caption = document.querySelector('.reactor-caption');
+      if (caption) caption.textContent = 'REACTOR OVERLOAD — NICE.';
+    }
+    document.dispatchEvent(new CustomEvent('reactor:overcharge'));
+  }
+
+  /* ---------------------------------------------------------
+     3D ARC REACTOR (Three.js, via CDN — see index.html)
+     Progressive enhancement over the CSS/SVG reactor above:
+     - only runs if THREE loaded successfully and the visitor
+       doesn't prefer reduced motion
+     - on any failure it just leaves the SVG fallback in place
+     - lazy-initialized after the boot sequence finishes so it
+       never competes with first paint / boot animation
+  --------------------------------------------------------- */
+  function initReactor3D() {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return; // SVG fallback stays as-is
+
+    const wrap = document.getElementById('hero-reactor-wrap');
+    const mount = document.getElementById('hero-reactor-3d');
+    if (!wrap || !mount || typeof THREE === 'undefined') return;
+
+    try {
+      const width = mount.clientWidth || 340;
+      const height = mount.clientHeight || 340;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(width, height);
+      mount.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      camera.position.set(0, 0, 7);
+      const camBase = { x: 0, y: 0 };
+
+      scene.add(new THREE.AmbientLight(0x2a2e35, 1.4));
+      const coreLight = new THREE.PointLight(0xffd700, 3, 12);
+      coreLight.position.set(0, 0, 3);
+      scene.add(coreLight);
+      const rimLight = new THREE.PointLight(0xd62828, 1.5, 12);
+      rimLight.position.set(-3, 2, 2);
+      scene.add(rimLight);
+
+      // Independently-rotating rings
+      const ringDefs = [
+        { radius: 2.55, tube: 0.045, color: 0x8b0000, emissive: 0xff1e1e, speed: 0.006, axis: 'z' },
+        { radius: 2.05, tube: 0.04, color: 0xc99700, emissive: 0xffd700, speed: -0.009, axis: 'y' },
+        { radius: 1.55, tube: 0.06, color: 0xff1e1e, emissive: 0xff1e1e, speed: 0.014, axis: 'x' },
+      ];
+      const ringsGroup = new THREE.Group();
+      const rings = ringDefs.map((def) => {
+        const geo = new THREE.TorusGeometry(def.radius, def.tube, 16, 72);
+        const mat = new THREE.MeshStandardMaterial({
+          color: def.color,
+          emissive: def.emissive,
+          emissiveIntensity: 0.55,
+          metalness: 0.75,
+          roughness: 0.3,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        ringsGroup.add(mesh);
+        return { mesh, ...def };
+      });
+      scene.add(ringsGroup);
+
+      // Core
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        emissive: 0xffd700,
+        emissiveIntensity: 1.3,
+        metalness: 0.4,
+        roughness: 0.25,
+      });
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.85, 32, 32), coreMat);
+      scene.add(core);
+      const coreInnerMat = new THREE.MeshBasicMaterial({ color: 0xfff2c2 });
+      const coreInner = new THREE.Mesh(new THREE.SphereGeometry(0.4, 24, 24), coreInnerMat);
+      scene.add(coreInner);
+
+      // Mouse parallax tilt toward cursor, relative to the wrap element
+      let targetRotX = 0, targetRotY = 0;
+      function onPointerMove(e) {
+        const rect = wrap.getBoundingClientRect();
+        const nx = (e.clientX - rect.left) / rect.width - 0.5;
+        const ny = (e.clientY - rect.top) / rect.height - 0.5;
+        targetRotY = nx * 0.55;
+        targetRotX = -ny * 0.4;
+      }
+      window.addEventListener('mousemove', onPointerMove);
+
+      // Overcharge: light-intensity spike + camera shake, decaying over time
+      let shakeIntensity = 0;
+      let overcharging = false;
+      function triggerOvercharge() {
+        overcharging = true;
+        shakeIntensity = 0.4;
+        coreLight.intensity = 9;
+        coreMat.emissiveIntensity = 3;
+      }
+      mount.style.cursor = 'pointer';
+      mount.addEventListener('click', () => {
+        const reactorEl = document.getElementById('hero-reactor');
+        if (reactorEl) {
+          reactorEl.classList.remove('overcharged');
+          void reactorEl.offsetWidth;
+          reactorEl.classList.add('overcharged');
+        }
+        triggerOvercharge();
+        handleReactorClick();
+      });
+      // Stay in sync if overcharge is ever triggered elsewhere
+      document.addEventListener('reactor:overcharge', () => {
+        if (!overcharging) triggerOvercharge();
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        rings.forEach((r) => { r.mesh.rotation[r.axis] += r.speed; });
+        ringsGroup.rotation.x += (targetRotX - ringsGroup.rotation.x) * 0.06;
+        ringsGroup.rotation.y += (targetRotY - ringsGroup.rotation.y) * 0.06;
+
+        if (shakeIntensity > 0.002) {
+          camera.position.x = camBase.x + (Math.random() - 0.5) * shakeIntensity;
+          camera.position.y = camBase.y + (Math.random() - 0.5) * shakeIntensity;
+          shakeIntensity *= 0.9;
+          coreLight.intensity += (3 - coreLight.intensity) * 0.07;
+          coreMat.emissiveIntensity += (1.3 - coreMat.emissiveIntensity) * 0.07;
+        } else {
+          overcharging = false;
+          camera.position.x = camBase.x;
+          camera.position.y = camBase.y;
+        }
+
+        renderer.render(scene, camera);
+      }
+      requestAnimationFrame(animate);
+
+      window.addEventListener('resize', () => {
+        const w = mount.clientWidth, h = mount.clientHeight;
+        if (!w || !h) return;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      });
+
+      // Everything above succeeded — swap the visible reactor to 3D
+      wrap.classList.add('reactor-3d-active');
+    } catch (err) {
+      // Any failure (WebGL unavailable, context creation error, etc.)
+      // just leaves the SVG reactor as the visible one.
+      console.warn('3D reactor unavailable, using SVG fallback:', err);
+    }
   }
 
   function animateCounter(el) {
