@@ -527,16 +527,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Overshoot-then-settle easing ("easeOutBack") — gives counters a
+  // measured, targeting-reticle-locking feel instead of a plain
+  // linear/ease-out count-up. Briefly overshoots the target value then
+  // settles back, per the HUD calibration pass.
+  function easeOutBack(x) {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+  }
+
   function animateCounter(el) {
     const target = parseFloat(el.dataset.target);
     const suffix = el.dataset.suffix || '';
-    const duration = 1400;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = target + suffix;
+      return;
+    }
+    const duration = 1100;
     const start = performance.now();
     function frame(now) {
       const p = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(target * eased) + suffix;
+      const eased = easeOutBack(p);
+      const value = Math.max(0, Math.round(target * eased));
+      el.textContent = value + suffix;
       if (p < 1) requestAnimationFrame(frame);
+      else el.textContent = target + suffix; // land exactly on target, no residual overshoot
     }
     requestAnimationFrame(frame);
   }
@@ -601,10 +617,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function initProjects() {
     const filterWrap = document.getElementById('project-filters');
     const grid = document.getElementById('projects-grid');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     filterWrap.innerHTML = D.projectCategories.map((cat, i) =>
       `<button class="filter-btn ${i === 0 ? 'active' : ''}" data-cat="${cat}">${cat}</button>`
     ).join('');
+
+    // decorative telemetry bars — purely visual, count/heights don't mean anything
+    const telemetryBars = Array.from({ length: 8 }, () => '<span></span>').join('');
 
     function renderProjects(filter) {
       const list = filter === 'All' ? D.projects : D.projects.filter(p => p.category === filter);
@@ -619,6 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="project-tools">
               ${p.tools.slice(0, 3).map(t => `<span class="tool-chip">${t}</span>`).join('')}
             </div>
+            <div class="telemetry-strip" aria-hidden="true">${telemetryBars}</div>
             <span class="project-view-more">View Details →</span>
           </div>
         </article>
@@ -629,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') openProjectModal(D.projects[card.dataset.idx]);
         });
+        if (!reduceMotion) attachCardTilt(card);
       });
     }
     renderProjects('All');
@@ -642,8 +664,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Subtle 3D tilt-on-hover, following cursor position within the card
+  // (~6deg max, CSS transform driven by JS-set custom properties — no
+  // library). Skipped entirely under prefers-reduced-motion.
+  function attachCardTilt(card) {
+    const MAX_TILT_DEG = 6;
+    function onMove(e) {
+      const rect = card.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const tiltX = (py - 0.5) * -2 * MAX_TILT_DEG;
+      const tiltY = (px - 0.5) * 2 * MAX_TILT_DEG;
+      card.style.setProperty('--tilt-x', tiltX.toFixed(2) + 'deg');
+      card.style.setProperty('--tilt-y', tiltY.toFixed(2) + 'deg');
+    }
+    function onLeave() {
+      card.style.setProperty('--tilt-x', '0deg');
+      card.style.setProperty('--tilt-y', '0deg');
+    }
+    card.addEventListener('mousemove', onMove);
+    card.addEventListener('mouseleave', onLeave);
+  }
+
   function openProjectModal(p) {
     const modal = document.getElementById('project-modal');
+    const specs = p.specs || [];
+    const gallery = (p.gallery && p.gallery.length) ? p.gallery : [p.image];
+
     document.getElementById('modal-content').innerHTML = `
       <img class="modal-img" src="${p.image}" alt="${p.title}" />
       <div class="modal-inner">
@@ -653,15 +700,54 @@ document.addEventListener('DOMContentLoaded', () => {
           <div><strong>Category</strong>${p.category}</div>
           <div><strong>Outcome</strong>${p.outcome}</div>
         </div>
-        <p class="desc">${p.description}</p>
-        <div class="project-tools">${p.tools.map(t => `<span class="tool-chip">${t}</span>`).join('')}</div>
-        <div class="modal-links" style="margin-top:1.4rem;">
-          ${p.github ? `<a class="btn btn-outline" href="${p.github}" target="_blank" rel="noopener"><span>GitHub Repo</span></a>` : ''}
-          ${p.demo ? `<a class="btn btn-outline" href="${p.demo}" target="_blank" rel="noopener"><span>Live Demo</span></a>` : ''}
-          ${p.report ? `<a class="btn btn-outline" href="${p.report}" target="_blank" rel="noopener"><span>Full Report (PDF)</span></a>` : ''}
+
+        <div class="modal-tabs" role="tablist">
+          <button class="modal-tab active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+          <button class="modal-tab" data-tab="specs" role="tab" aria-selected="false">Specs</button>
+          <button class="modal-tab" data-tab="gallery" role="tab" aria-selected="false">Gallery</button>
+        </div>
+
+        <div class="modal-tab-panel active" data-panel="overview" role="tabpanel">
+          <p class="desc">${p.description}</p>
+          <div class="project-tools">${p.tools.map(t => `<span class="tool-chip">${t}</span>`).join('')}</div>
+          <div class="modal-links">
+            ${p.github ? `<a class="btn btn-outline" href="${p.github}" target="_blank" rel="noopener"><span>GitHub Repo</span></a>` : ''}
+            ${p.demo ? `<a class="btn btn-outline" href="${p.demo}" target="_blank" rel="noopener"><span>Live Demo</span></a>` : ''}
+            ${p.report ? `<a class="btn btn-outline" href="${p.report}" target="_blank" rel="noopener"><span>Full Report (PDF)</span></a>` : ''}
+          </div>
+        </div>
+
+        <div class="modal-tab-panel" data-panel="specs" role="tabpanel">
+          ${specs.length
+            ? specs.map(s => `
+                <div class="spec-row">
+                  <span class="spec-label">${s.label}</span>
+                  <span class="spec-value">${s.value}</span>
+                </div>
+              `).join('')
+            : '<p class="desc">No additional specs listed for this project yet.</p>'}
+        </div>
+
+        <div class="modal-tab-panel" data-panel="gallery" role="tabpanel">
+          <div class="modal-gallery-grid">
+            ${gallery.map(src => `<img src="${src}" alt="${p.title} photo" loading="lazy" />`).join('')}
+          </div>
         </div>
       </div>
     `;
+
+    const tabs = modal.querySelectorAll('.modal-tab');
+    const panels = modal.querySelectorAll('.modal-tab-panel');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        panels.forEach(panel => panel.classList.remove('active'));
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        modal.querySelector(`.modal-tab-panel[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+      });
+    });
+
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
