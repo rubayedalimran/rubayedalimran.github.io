@@ -87,7 +87,7 @@ body {
 
 @media (hover: none), (pointer: coarse) {
   body { cursor: auto; }
-  .cursor-dot, .cursor-ring { display: none; }
+  .cursor-dot, .cursor-ring, .cursor-fx { display: none; }
 }
 
 img { max-width: 100%; display: block; }
@@ -184,6 +184,17 @@ button { font-family: inherit; cursor: pointer; }
 .cursor-ring.cursor-active {
   width: 50px; height: 50px;
   border-color: var(--gold);
+}
+
+/* Repulsor spark trail + click-pulse canvas — sits just below the dot/ring,
+   purely decorative, drawn and cleared each frame (no accumulating DOM
+   nodes), and gated off entirely for reduced-motion / touch in JS. */
+.cursor-fx {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9998;
 }
 
 /* ============================================================
