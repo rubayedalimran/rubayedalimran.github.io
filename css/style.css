@@ -690,6 +690,60 @@ button { font-family: inherit; cursor: pointer; }
 .fact .fact-value { font-weight: 600; font-size: 0.92rem; }
 
 /* ============================================================
+   GITHUB TELEMETRY PANEL (Priority 8)
+   Populated at runtime by initGithubStats() in main.js. Hidden
+   (aria-hidden + display:none via .gh-hidden) until data actually
+   arrives, so a failed/slow API call never leaves an empty box.
+   ============================================================ */
+.github-stats {
+  margin-top: 1.6rem;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  background-image: var(--noise-metal);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+}
+.github-stats.gh-hidden { display: none; }
+.gh-stats-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-brushed);
+  margin-bottom: 0.9rem;
+}
+.gh-stats-head svg { width: 14px; height: 14px; fill: var(--gold-brushed); }
+.gh-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.gh-stat .gh-stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  color: var(--gold);
+  display: block;
+}
+.gh-stat .gh-stat-label {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.gh-stats-link {
+  display: inline-block;
+  margin-top: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  border-bottom: 1px dashed var(--panel-border);
+}
+.gh-stats-link:hover { color: var(--gold); border-color: var(--gold); }
+
+/* ============================================================
    SKILLS
    ============================================================ */
 .skills-grid {
