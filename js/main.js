@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function lazyInitHeavyFeatures() {
     initReactor3D();
     initAtmosphere();
+    initGithubStats();
   }
 
   /* ---------------------------------------------------------
@@ -798,6 +799,72 @@ document.addEventListener('DOMContentLoaded', () => {
       'color:#ffd700;font-family:monospace;font-weight:bold;font-size:13px;',
       'color:#9aa1ab;font-family:monospace;font-size:12px;'
     );
+  }
+
+  /* ---------------------------------------------------------
+     GITHUB LIVE STATS (Priority 8)
+     Two independent, best-effort fetches against GitHub's public REST
+     API (no auth, subject to GitHub's unauthenticated rate limit):
+       1. GET /users/{username}          -> public repo count, followers
+       2. GET /repos/{username}/{repo}/commits?per_page=1
+                                          -> "Last calibrated" date
+     Each is wrapped separately so one failing (rate limit, offline,
+     repo renamed, etc.) doesn't take out the other. On any failure the
+     relevant UI is just left hidden/omitted — never a broken placeholder.
+     Lazy-initialized via the same idle-callback trigger as the 3D
+     reactor / atmosphere layer, since this is pure enhancement and
+     depends on a network round trip.
+  --------------------------------------------------------- */
+  function initGithubStats() {
+    const cfg = D.github;
+    if (!cfg || !cfg.username) return;
+
+    // --- Profile stats panel (About section) ---
+    const panel = document.getElementById('github-stats');
+    if (panel) {
+      fetch(`https://api.github.com/users/${encodeURIComponent(cfg.username)}`)
+        .then(res => { if (!res.ok) throw new Error('GitHub profile fetch failed'); return res.json(); })
+        .then(user => {
+          panel.innerHTML = `
+            <div class="gh-stats-head">
+              <svg viewBox="0 0 24 24"><path d="M12 .5C5.73.5.75 5.48.75 11.75c0 5.02 3.26 9.27 7.78 10.77.57.1.78-.25.78-.55v-2.1c-3.16.69-3.83-1.36-3.83-1.36-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.34.95.1-.74.4-1.24.72-1.53-2.52-.29-5.17-1.26-5.17-5.6 0-1.24.44-2.24 1.17-3.03-.12-.29-.5-1.46.11-3.05 0 0 .96-.31 3.14 1.16a10.9 10.9 0 0 1 5.72 0c2.18-1.47 3.14-1.16 3.14-1.16.61 1.59.23 2.76.11 3.05.73.79 1.17 1.79 1.17 3.03 0 4.35-2.66 5.31-5.19 5.59.41.35.77 1.04.77 2.11v3.13c0 .3.21.66.79.55A11.26 11.26 0 0 0 23.25 11.75C23.25 5.48 18.27.5 12 .5z"/></svg>
+              <span>Live GitHub Telemetry</span>
+            </div>
+            <div class="gh-stats-row">
+              <div class="gh-stat">
+                <span class="gh-stat-value">${user.public_repos ?? '—'}</span>
+                <span class="gh-stat-label">Public Repos</span>
+              </div>
+              <div class="gh-stat">
+                <span class="gh-stat-value">${user.followers ?? '—'}</span>
+                <span class="gh-stat-label">Followers</span>
+              </div>
+              <div class="gh-stat">
+                <span class="gh-stat-value">${user.public_gists ?? '—'}</span>
+                <span class="gh-stat-label">Gists</span>
+              </div>
+            </div>
+            <a class="gh-stats-link" href="${user.html_url || `https://github.com/${cfg.username}`}" target="_blank" rel="noopener">View GitHub profile →</a>
+          `;
+          panel.classList.remove('gh-hidden');
+          panel.setAttribute('aria-hidden', 'false');
+        })
+        .catch(() => { /* leave panel hidden — no broken/empty box */ });
+    }
+
+    // --- "Last calibrated" footer stamp, from the latest commit date ---
+    const stamp = document.getElementById('footer-calibrated');
+    if (stamp && cfg.repo) {
+      fetch(`https://api.github.com/repos/${encodeURIComponent(cfg.username)}/${encodeURIComponent(cfg.repo)}/commits?per_page=1`)
+        .then(res => { if (!res.ok) throw new Error('GitHub commits fetch failed'); return res.json(); })
+        .then(commits => {
+          const dateStr = commits && commits[0] && commits[0].commit && commits[0].commit.author && commits[0].commit.author.date;
+          if (!dateStr) return;
+          const formatted = new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+          stamp.textContent = `Last calibrated: ${formatted}`;
+        })
+        .catch(() => { /* leave stamp empty — omit rather than show stale/fake data */ });
+    }
   }
 
   /* ---------------------------------------------------------
