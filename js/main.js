@@ -84,6 +84,105 @@ document.addEventListener('DOMContentLoaded', () => {
       el.addEventListener('mouseenter', () => ring.classList.add('cursor-active'));
       el.addEventListener('mouseleave', () => ring.classList.remove('cursor-active'));
     });
+
+    initCursorRepulsor();
+  }
+
+  /* ---------------------------------------------------------
+     CURSOR REPULSOR — spark trail + click-pulse ring
+     Priority 3 upgrade: replaces the plain lag-ring trail feel with a
+     handful of fading gold sparks, plus an expanding "repulsor pulse"
+     ring on click. Canvas-based and intentionally cheap:
+       - hard-capped particle count (never grows unbounded)
+       - spawn rate throttled independent of mouse-move frequency
+       - clears + redraws each frame rather than accumulating DOM nodes
+       - fully skipped for prefers-reduced-motion and touch/coarse
+         pointers, matching the existing cursor's own gating
+  --------------------------------------------------------- */
+  function initCursorRepulsor() {
+    const canvas = document.getElementById('cursor-fx');
+    if (!canvas) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const coarsePointer = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    if (reduceMotion || coarsePointer) return;
+
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const MAX_SPARKS = 40;
+    const SPARK_SPAWN_INTERVAL_MS = 25;
+    const sparks = [];
+    const pulses = [];
+
+    let lastSparkAt = 0;
+    window.addEventListener('mousemove', (e) => {
+      const now = performance.now();
+      if (now - lastSparkAt < SPARK_SPAWN_INTERVAL_MS) return;
+      lastSparkAt = now;
+      if (sparks.length >= MAX_SPARKS) sparks.shift();
+      sparks.push({
+        x: e.clientX,
+        y: e.clientY,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        life: 0,
+        maxLife: 400 + Math.random() * 250,
+        size: 1 + Math.random() * 1.8,
+      });
+    });
+
+    window.addEventListener('click', (e) => {
+      pulses.push({ x: e.clientX, y: e.clientY, radius: 4, alpha: 0.9 });
+    });
+
+    let lastFrame = performance.now();
+    function draw(now) {
+      requestAnimationFrame(draw);
+      const dt = Math.min(now - lastFrame, 48); // clamp so a stalled tab doesn't jump particles
+      lastFrame = now;
+      ctx.clearRect(0, 0, w, h);
+
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const s = sparks[i];
+        s.life += dt;
+        if (s.life >= s.maxLife) { sparks.splice(i, 1); continue; }
+        s.x += s.vx * dt * 0.06;
+        s.y += s.vy * dt * 0.06;
+        const p = s.life / s.maxLife;
+        const alpha = (1 - p) * 0.7;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size * (1 - p * 0.4), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+        ctx.fill();
+      }
+
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.radius += dt * 0.09;
+        p.alpha -= dt * 0.0022;
+        if (p.alpha <= 0) { pulses.splice(i, 1); continue; }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 184, 0, ${p.alpha})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // hotter inner edge, trailing slightly behind the outer ring
+        const innerR = Math.max(p.radius - 6, 0);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, innerR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 30, 30, ${p.alpha * 0.6})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+    requestAnimationFrame(draw);
   }
 
   /* ---------------------------------------------------------
