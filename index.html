@@ -126,6 +126,10 @@
       <div class="about-body">
         <div id="about-paragraphs"></div>
         <div class="quick-facts" id="quick-facts"></div>
+        <!-- Live GitHub stats (Priority 8) — populated by initGithubStats()
+             in main.js via the public GitHub API. Hidden if the fetch
+             fails, so there's never a broken/empty-looking panel. -->
+        <div class="github-stats" id="github-stats" aria-hidden="true"></div>
       </div>
     </div>
   </section>
@@ -226,6 +230,7 @@
 <footer class="site-footer">
   <p id="footer-text"></p>
   <p class="footer-meta">Built with vanilla HTML/CSS/JS · Hosted on GitHub Pages</p>
+  <p class="footer-meta" id="footer-calibrated"></p>
 </footer>
 
 <!-- ============ PROJECT MODAL ============ -->
