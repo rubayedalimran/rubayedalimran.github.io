@@ -1,1 +1,0 @@
-Drop project render images here (jpg/png). Filenames must match the 'image' field in js/data.js for each project.
