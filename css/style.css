@@ -596,6 +596,47 @@ button { font-family: inherit; cursor: pointer; }
 @keyframes scroll-cue-move { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
 
 /* ============================================================
+   JARVIS STATUS LINE (Priority 6)
+   Rotating diagnostic readout pinned to the hero's top-right corner.
+   Purely decorative/personality — content comes from
+   PORTFOLIO_DATA.hero.jarvisStatus in data.js. Fade timing relies on
+   the global prefers-reduced-motion rule above (which zeroes out all
+   transition-durations), so no extra JS gating is needed here.
+   ============================================================ */
+.jarvis-status {
+  position: absolute;
+  top: 1.6rem;
+  right: 2.2rem;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  max-width: 260px;
+  text-align: right;
+  pointer-events: none;
+}
+.jarvis-status-label {
+  color: var(--gold-brushed);
+  flex-shrink: 0;
+}
+.jarvis-status-text {
+  color: var(--text-dim);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.jarvis-status-text.jarvis-fade {
+  opacity: 0;
+}
+@media (max-width: 900px) {
+  /* Corner readout gets cramped once the reactor reorders above the
+     text on smaller layouts — hide rather than fight for space. */
+  .jarvis-status { display: none; }
+}
+
+/* ============================================================
    ABOUT
    ============================================================ */
 .about-grid {
@@ -1135,6 +1176,81 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 0.85rem;
 }
 .footer-meta { font-family: var(--font-mono); font-size: 0.7rem; margin-top: 0.3rem; }
+
+/* ============================================================
+   KONAMI EASTER EGG OVERLAY (Priority 6)
+   Full-screen overlay triggered by ↑↑↓↓←→←→BA (see main.js
+   initKonamiCode / triggerKonamiSequence). Hidden by default,
+   shown via the .open class. Sits above everything, including the
+   boot screen, since it can only ever be triggered post-boot.
+   Content (title + log lines) is data-driven from
+   PORTFOLIO_DATA.easterEgg in data.js.
+   ============================================================ */
+.konami-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+.konami-overlay.open { opacity: 1; visibility: visible; }
+.konami-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  text-align: center;
+  padding: 2rem;
+}
+.konami-flare {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold-hot) 0%, var(--red-core) 55%, transparent 75%);
+  filter: drop-shadow(0 0 30px var(--glow-gold));
+  animation: konami-pulse 1.4s ease-in-out infinite;
+}
+@keyframes konami-pulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.konami-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 5s linear infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.konami-log {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--gold-brushed);
+  min-height: 7em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.konami-hint {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--text-faint);
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .konami-flare { animation: none; }
+  .konami-title { animation: none; background-position: 0 0; }
+}
 
 /* ============================================================
    RESPONSIVE
