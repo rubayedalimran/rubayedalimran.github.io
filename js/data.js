@@ -136,6 +136,11 @@ const PORTFOLIO_DATA = {
   // categories: used for the filter buttons — keep names short
   // image: put a real screenshot/render in assets/img/
   // links: leave "" (empty string) to hide that button
+  // specs: shown in the modal's "Specs" tab — array of {label, value}.
+  //   Leave the array empty ([]) to hide that tab's content gracefully.
+  // gallery: shown in the modal's "Gallery" tab — array of image paths.
+  //   Defaults to just the main `image` if you don't add more; add
+  //   additional screenshots/renders/photos here as you take them.
   // ---------------------------------------------------------
   projectCategories: ["All", "Robotics", "CAD/Design", "Manufacturing", "Thermofluids"],
 
@@ -153,6 +158,14 @@ const PORTFOLIO_DATA = {
       github: "https://github.com/yourusername/line-following-rover",
       demo: "",
       report: "",
+      specs: [
+        { label: "Chassis", value: "3D-printed PETG, 5 revisions" },
+        { label: "Drivetrain", value: "4WD, dual differential" },
+        { label: "Controller", value: "Arduino Mega 2560" },
+        { label: "Sensors", value: "IR line array, 3x ultrasonic" },
+        { label: "Top Speed", value: "0.9 m/s" },
+      ],
+      gallery: ["assets/img/project-rover.jpg"],
     },
     {
       title: "Compact Cyclonic Separator",
@@ -167,6 +180,14 @@ const PORTFOLIO_DATA = {
       github: "https://github.com/yourusername/cyclonic-separator",
       demo: "",
       report: "assets/resume/cyclone-report.pdf",
+      specs: [
+        { label: "Cone Angle", value: "12.5° (optimized)" },
+        { label: "Inlet Velocity", value: "14 m/s" },
+        { label: "CFD Runs", value: "6 iterations, ANSYS Fluent" },
+        { label: "Separation Efficiency", value: "89% (up from 61%)" },
+        { label: "Prototype Material", value: "PETG, 3D-printed" },
+      ],
+      gallery: ["assets/img/project-cyclone.jpg"],
     },
     {
       title: "Modular Bike Cargo Rack",
@@ -181,6 +202,14 @@ const PORTFOLIO_DATA = {
       github: "https://github.com/yourusername/modular-bike-rack",
       demo: "",
       report: "",
+      specs: [
+        { label: "Rated Load", value: "20 kg (tested to 25 kg)" },
+        { label: "Safety Factor", value: "1.5x" },
+        { label: "Material", value: "6061 Aluminum extrusion" },
+        { label: "Mount Modes", value: "Pannier / Crate / Flat deck" },
+        { label: "Swap Time", value: "< 10 seconds, tool-free" },
+      ],
+      gallery: ["assets/img/project-rack.jpg"],
     },
     {
       title: "CNC-Milled Planetary Gearbox",
@@ -195,6 +224,14 @@ const PORTFOLIO_DATA = {
       github: "https://github.com/yourusername/planetary-gearbox",
       demo: "",
       report: "",
+      specs: [
+        { label: "Reduction Ratio", value: "5:1" },
+        { label: "Material", value: "6061 Aluminum" },
+        { label: "Backlash", value: "< 0.2°" },
+        { label: "Mechanical Efficiency", value: "94% (measured)" },
+        { label: "Machine", value: "3-axis CNC mill + 4th-axis rotary" },
+      ],
+      gallery: ["assets/img/project-gearbox.jpg"],
     },
   ],
 
