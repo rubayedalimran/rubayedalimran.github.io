@@ -558,6 +558,138 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ---------------------------------------------------------
+     JARVIS STATUS LINE (Priority 6)
+     Cycles PORTFOLIO_DATA.hero.jarvisStatus through the hero corner
+     readout. Fades out, swaps the text, fades back in. Reduced-motion
+     visitors still get the rotation (it's just text, not a physical
+     motion effect), but the fade itself collapses to an instant swap
+     via the global prefers-reduced-motion transition override in
+     style.css, so no extra gating is needed here.
+  --------------------------------------------------------- */
+  function initJarvisStatus() {
+    const textEl = document.getElementById('jarvis-status-text');
+    const lines = D.hero.jarvisStatus;
+    if (!textEl || !lines || !lines.length) return;
+
+    let i = 0;
+    textEl.textContent = lines[0];
+
+    function next() {
+      textEl.classList.add('jarvis-fade');
+      setTimeout(() => {
+        i = (i + 1) % lines.length;
+        textEl.textContent = lines[i];
+        textEl.classList.remove('jarvis-fade');
+      }, 400);
+    }
+    setInterval(next, 4200);
+  }
+
+  /* ---------------------------------------------------------
+     KONAMI CODE EASTER EGG (Priority 6)
+     ↑↑↓↓←→←→BA triggers a full-screen "Mark Suit Boot Sequence"
+     overlay: a pulsing flare + a short terminal-style log revealed
+     line by line, using content from PORTFOLIO_DATA.easterEgg. Fully
+     self-dismissing (auto-closes), but Escape or a click also closes
+     it early. Respects reduced motion by skipping the pulse animation
+     and revealing all lines at once instead of staggered.
+  --------------------------------------------------------- */
+  function initKonamiCode() {
+    const sequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let pos = 0;
+
+    window.addEventListener('keydown', (e) => {
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (key === sequence[pos]) {
+        pos++;
+        if (pos === sequence.length) {
+          pos = 0;
+          triggerKonamiSequence();
+        }
+      } else {
+        // Allow the sequence to restart mid-stream if the "wrong" key
+        // happens to be the sequence's own first key (e.g. mashing ↑).
+        pos = (key === sequence[0]) ? 1 : 0;
+      }
+    });
+  }
+
+  function triggerKonamiSequence() {
+    const overlay = document.getElementById('konami-overlay');
+    const titleEl = document.getElementById('konami-title');
+    const logEl = document.getElementById('konami-log');
+    if (!overlay || !titleEl || !logEl || !D.easterEgg) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const lines = D.easterEgg.konamiLines || [];
+
+    titleEl.textContent = D.easterEgg.konamiTitle || '';
+    logEl.innerHTML = '';
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    if (reduceMotion) {
+      lines.forEach(line => {
+        const p = document.createElement('div');
+        p.textContent = line;
+        logEl.appendChild(p);
+      });
+    } else {
+      lines.forEach((line, idx) => {
+        setTimeout(() => {
+          const p = document.createElement('div');
+          p.textContent = line;
+          logEl.appendChild(p);
+        }, idx * 380);
+      });
+    }
+
+    const dismissDelay = reduceMotion ? 2200 : lines.length * 380 + 1400;
+    const dismissTimer = setTimeout(close, dismissDelay);
+
+    function close() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.removeEventListener('keydown', onKeyDismiss);
+      overlay.removeEventListener('click', close);
+    }
+    function onKeyDismiss(e) {
+      if (e.key === 'Escape') {
+        clearTimeout(dismissTimer);
+        close();
+      }
+    }
+    document.addEventListener('keydown', onKeyDismiss);
+    overlay.addEventListener('click', close);
+  }
+
+  /* ---------------------------------------------------------
+     CONSOLE GREETING (Priority 6)
+     A time-of-day-aware, terminal-boot-log-styled message for anyone
+     who opens devtools (recruiters, curious visitors). Pure flavor —
+     no interactivity, no data dependency beyond the current time.
+  --------------------------------------------------------- */
+  function initConsoleGreeting() {
+    const hour = new Date().getHours();
+    const greeting =
+      hour < 5 ? 'BURNING THE MIDNIGHT OIL, PILOT.' :
+      hour < 12 ? 'GOOD MORNING, PILOT.' :
+      hour < 17 ? 'GOOD AFTERNOON, PILOT.' :
+      hour < 21 ? 'GOOD EVENING, PILOT.' :
+      'BURNING THE MIDNIGHT OIL, PILOT.';
+
+    console.log(
+      '%c[ SYSTEM BOOT LOG ]%c\n' +
+      `${greeting}\n` +
+      'HUD ONLINE. ALL SYSTEMS NOMINAL.\n' +
+      "— poking around the console? nice. hire this engineer.\n" +
+      `LOCAL TIME: ${new Date().toLocaleTimeString()}`,
+      'color:#ffd700;font-family:monospace;font-weight:bold;font-size:13px;',
+      'color:#9aa1ab;font-family:monospace;font-size:12px;'
+    );
+  }
+
+  /* ---------------------------------------------------------
      ABOUT
   --------------------------------------------------------- */
   function initAbout() {
@@ -906,4 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTestimonials();
   initContact();
   initMisc();
+  initJarvisStatus();
+  initKonamiCode();
+  initConsoleGreeting();
 });
