@@ -19,7 +19,7 @@ const PORTFOLIO_DATA = {
   // SITE-WIDE / META
   // ---------------------------------------------------------
   meta: {
-    siteTitle: "Alex Rhodes — Mechanical Engineer",
+    siteTitle: "Rubayed Al Imran — Mechanical Engineer",
     tagline: "Mechanical Engineering Student",
     favicon: "assets/img/favicon.svg",
     ogImage: "assets/img/og-cover.jpg", // used when your link is shared on social media
@@ -44,7 +44,7 @@ const PORTFOLIO_DATA = {
   // ---------------------------------------------------------
   hero: {
     eyebrow: "SYSTEM STATUS: OPERATIONAL",
-    name: "Alex Rhodes",
+    name: "Rubayed Al Imran",
     // Each string types out, pauses, then deletes and types the next one
     rotatingRoles: [
       "Mechanical Engineering Student",
@@ -63,6 +63,20 @@ const PORTFOLIO_DATA = {
       { value: 1200, suffix: "+", label: "Hrs in SolidWorks" },
       { value: 6, suffix: "", label: "Manufacturing Processes" },
     ],
+    // JARVIS-style status line that cycles in the hero's top-right corner
+    // (Priority 6). Mix real-ish diagnostic readouts with a couple of
+    // genuinely personal/funny ones — that contrast is the whole point.
+    // Keep each line short (~40 chars) so it doesn't wrap awkwardly.
+    jarvisStatus: [
+      "AMBIENT TEMP: NOMINAL",
+      "STRUCTURAL INTEGRITY: 100%",
+      "REACTOR OUTPUT: STABLE",
+      "COFFEE RESERVES: CRITICALLY LOW",
+      "CAD FILE COUNT: 1,247 AND CLIMBING",
+      "DEADLINE PROXIMITY: UNCOMFORTABLY CLOSE",
+      "SLEEP SCHEDULE: THEORETICAL",
+      "TOLERANCE STACK-UP: WITHIN SPEC",
+    ],
   },
 
   // ---------------------------------------------------------
@@ -78,11 +92,11 @@ const PORTFOLIO_DATA = {
     ],
     photo: "assets/img/profile.jpg", // replace with your own photo
     quickFacts: [
-      { label: "Location", value: "Detroit, MI" },
-      { label: "University", value: "State University" },
+      { label: "Location", value: "Khulna, Bangladesh" },
+      { label: "University", value: "Khulna University of Engineering & Technology" },
       { label: "Major", value: "Mechanical Engineering" },
-      { label: "Expected Grad", value: "May 2027" },
-      { label: "GPA", value: "3.8 / 4.0" },
+      { label: "Expected Grad", value: "Dec 2028" },
+      { label: "GPA", value: "3.37 / 4.0" },
       { label: "Availability", value: "Open to Internships" },
     ],
   },
@@ -105,10 +119,10 @@ const PORTFOLIO_DATA = {
     {
       category: "Analysis & Simulation",
       skills: [
-        { name: "FEA (ANSYS)", level: 70 },
-        { name: "CFD Basics", level: 58 },
-        { name: "MATLAB", level: 80 },
-        { name: "Thermodynamics Modeling", level: 65 },
+        { name: "FEA (ANSYS)", level: 45 },
+        { name: "CFD Basics", level: 24 },
+        { name: "MATLAB", level: 10 },
+        { name: "Thermodynamics Modeling", level: 38 },
       ],
     },
     {
@@ -124,9 +138,9 @@ const PORTFOLIO_DATA = {
       category: "Programming & Controls",
       skills: [
         { name: "Python", level: 82 },
-        { name: "Arduino / C++", level: 77 },
-        { name: "ROS Basics", level: 45 },
-        { name: "PLC / Ladder Logic", level: 40 },
+        { name: "Arduino / C++", level: 90 },
+        { name: "ROS Basics", level: 65 },
+        { name: "PLC / Ladder Logic", level: 50 },
       ],
     },
   ],
@@ -243,31 +257,31 @@ const PORTFOLIO_DATA = {
     {
       type: "experience",
       date: "Jun 2026 — Aug 2026",
-      title: "Mechanical Design Intern",
+      title: "Sample",
       org: "Ferrotech Manufacturing Co.",
       description:
         "Redesigned 3 fixture assemblies to cut changeover time by 22%. Created full drawing packages and ran first-article inspections on CMM.",
     },
     {
       type: "education",
-      date: "Aug 2024 — Present",
-      title: "B.S. Mechanical Engineering",
-      org: "State University",
+      date: "Oct 2024 — Present",
+      title: "B.Sc Mechanical Engineering",
+      org: "Khulna University of Engineering & Technology",
       description:
         "Relevant coursework: Thermodynamics, Fluid Mechanics, Machine Design, Materials Science, Controls, Manufacturing Processes.",
     },
     {
       type: "experience",
       date: "May 2025 — Aug 2025",
-      title: "Robotics Team Lead",
+      title: "Sample",
       org: "University Robotics Club",
       description:
         "Led a 6-person subteam building a competition rover's drivetrain. Managed budget, part sourcing, and build schedule.",
     },
     {
       type: "education",
-      date: "Aug 2022 — May 2024",
-      title: "Associate of Science, Pre-Engineering",
+      date: "Feb 2022 — Dec 2023",
+      title: "Sample",
       org: "Community College of Detroit",
       description:
         "Graduated with honors. Captain of the SAE Baja design sub-team in final year.",
@@ -313,16 +327,33 @@ const PORTFOLIO_DATA = {
     heading: "Open a Channel",
     subtext:
       "Internship leads, project collabs, or just talking gearboxes — my inbox is open.",
-    email: "alex.rhodes@example.com",
+    email: "rubayedalimran9909@gmail.com",
     formspreeEndpoint: "", // e.g. "https://formspree.io/f/abcdwxyz"
     socials: [
-      { label: "GitHub", url: "https://github.com/yourusername", icon: "github" },
-      { label: "LinkedIn", url: "https://linkedin.com/in/yourusername", icon: "linkedin" },
-      { label: "Email", url: "mailto:alex.rhodes@example.com", icon: "mail" },
+      { label: "GitHub", url: "https://github.com/rubayedalimran", icon: "github" },
+      { label: "LinkedIn", url: "https://linkedin.com/in/rubayed-al-imran", icon: "linkedin" },
+      { label: "Email", url: "mailto:rubayedalimran9909@gmail.com", icon: "mail" },
     ],
   },
 
   footer: {
-    text: "Designed & built by Alex Rhodes.",
+    text: "Designed & built by Rubayed Al Imran.",
+  },
+
+  // ---------------------------------------------------------
+  // EASTER EGG (Priority 6) — Konami code full-screen boot overlay.
+  // konamiLines are revealed one at a time, terminal-log style.
+  // Keep it short — this is a flourish, not a screen the visitor is
+  // meant to sit and read for long.
+  // ---------------------------------------------------------
+  easterEgg: {
+    konamiTitle: "MARK VII BOOT SEQUENCE INITIATED",
+    konamiLines: [
+      "BYPASSING SAFETY INTERLOCKS...",
+      "SPOOLING REACTOR CORE...",
+      "CALIBRATING SERVOS...",
+      "HUD ONLINE.",
+      "WELCOME BACK, PILOT.",
+    ],
   },
 };
