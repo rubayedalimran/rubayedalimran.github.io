@@ -527,6 +527,30 @@ document.addEventListener('DOMContentLoaded', () => {
       rimLight.position.set(-3, 2, 2);
       scene.add(rimLight);
 
+      // Bloom postprocessing — the reactor's glow relies on this to read
+      // as genuinely "hot" rather than flat-colored. Fully optional: if
+      // the postprocessing CDN scripts failed to load for any reason,
+      // hasBloom stays false and the render loop below just falls back
+      // to a plain renderer.render() call — same graceful-degrade
+      // pattern as the rest of this function.
+      let composer = null;
+      let bloomPass = null;
+      const hasBloom = typeof THREE.EffectComposer !== 'undefined'
+        && typeof THREE.RenderPass !== 'undefined'
+        && typeof THREE.UnrealBloomPass !== 'undefined';
+      if (hasBloom) {
+        try {
+          composer = new THREE.EffectComposer(renderer);
+          composer.addPass(new THREE.RenderPass(scene, camera));
+          bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(width, height), 1.15, 0.55, 0.15);
+          composer.addPass(bloomPass);
+        } catch (bloomErr) {
+          console.warn('Bloom postprocessing unavailable, rendering without it:', bloomErr);
+          composer = null;
+          bloomPass = null;
+        }
+      }
+
       // Independently-rotating rings
       const ringDefs = [
         { radius: 2.55, tube: 0.045, color: 0x8b0000, emissive: 0xff1e1e, speed: 0.006, axis: 'z' },
@@ -539,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mat = new THREE.MeshStandardMaterial({
           color: def.color,
           emissive: def.emissive,
-          emissiveIntensity: 0.55,
+          emissiveIntensity: 1.4,
           metalness: 0.75,
           roughness: 0.3,
         });
@@ -549,11 +573,48 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       scene.add(ringsGroup);
 
+      // Spark/debris particle field scattered along the ring radii —
+      // added as a child of ringsGroup so it co-rotates with the rings
+      // for free (no extra per-frame rotation math needed). Cheap: a
+      // single THREE.Points draw call, fixed particle count, additive
+      // blending for the "hot spark" look matching the reference image.
+      const SPARK_COUNT = 140;
+      const sparkPositions = new Float32Array(SPARK_COUNT * 3);
+      const sparkColors = new Float32Array(SPARK_COUNT * 3);
+      const hotColor = new THREE.Color(0xffd700);
+      const coolColor = new THREE.Color(0xff3b1e);
+      for (let i = 0; i < SPARK_COUNT; i++) {
+        const ring = ringDefs[i % ringDefs.length];
+        const angle = Math.random() * Math.PI * 2;
+        const jitter = (Math.random() - 0.5) * 0.5;
+        const r = ring.radius + jitter;
+        const i3 = i * 3;
+        sparkPositions[i3] = Math.cos(angle) * r;
+        sparkPositions[i3 + 1] = Math.sin(angle) * r * (0.3 + Math.random() * 0.7);
+        sparkPositions[i3 + 2] = (Math.random() - 0.5) * 0.6;
+        const c = hotColor.clone().lerp(coolColor, Math.random());
+        sparkColors[i3] = c.r; sparkColors[i3 + 1] = c.g; sparkColors[i3 + 2] = c.b;
+      }
+      const sparkGeo = new THREE.BufferGeometry();
+      sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+      sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkColors, 3));
+      const sparkMat = new THREE.PointsMaterial({
+        size: 0.035,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true,
+      });
+      const sparks = new THREE.Points(sparkGeo, sparkMat);
+      ringsGroup.add(sparks);
+
       // Core
       const coreMat = new THREE.MeshStandardMaterial({
         color: 0xffd700,
         emissive: 0xffd700,
-        emissiveIntensity: 1.3,
+        emissiveIntensity: 2.2,
         metalness: 0.4,
         roughness: 0.25,
       });
@@ -562,6 +623,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const coreInnerMat = new THREE.MeshBasicMaterial({ color: 0xfff2c2 });
       const coreInner = new THREE.Mesh(new THREE.SphereGeometry(0.4, 24, 24), coreInnerMat);
       scene.add(coreInner);
+      // Blown-out hot-spot at the very center, additive-blended so it
+      // reads as overexposed light rather than a flat white ball —
+      // this is what bloom grabs onto to sell the "molten core" look.
+      const hotspotMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const hotspot = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), hotspotMat);
+      scene.add(hotspot);
 
       // Mouse parallax tilt toward cursor, relative to the wrap element
       let targetRotX = 0, targetRotY = 0;
@@ -581,7 +654,10 @@ document.addEventListener('DOMContentLoaded', () => {
         overcharging = true;
         shakeIntensity = 0.4;
         coreLight.intensity = 9;
-        coreMat.emissiveIntensity = 3;
+        coreMat.emissiveIntensity = 5;
+        if (bloomPass) bloomPass.strength = 2.4;
+        sparkMat.size = 0.07;
+        sparkMat.opacity = 1;
       }
       mount.style.cursor = 'pointer';
       mount.addEventListener('click', () => {
@@ -611,14 +687,18 @@ document.addEventListener('DOMContentLoaded', () => {
           camera.position.y = camBase.y + (Math.random() - 0.5) * shakeIntensity;
           shakeIntensity *= 0.9;
           coreLight.intensity += (3 - coreLight.intensity) * 0.07;
-          coreMat.emissiveIntensity += (1.3 - coreMat.emissiveIntensity) * 0.07;
+          coreMat.emissiveIntensity += (2.2 - coreMat.emissiveIntensity) * 0.07;
+          if (bloomPass) bloomPass.strength += (1.15 - bloomPass.strength) * 0.07;
+          sparkMat.size += (0.035 - sparkMat.size) * 0.07;
+          sparkMat.opacity += (0.85 - sparkMat.opacity) * 0.07;
         } else {
           overcharging = false;
           camera.position.x = camBase.x;
           camera.position.y = camBase.y;
         }
 
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
       }
       requestAnimationFrame(animate);
 
@@ -628,6 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer.setSize(w, h);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
+        if (composer) composer.setSize(w, h);
       });
 
       // Everything above succeeded — swap the visible reactor to 3D
