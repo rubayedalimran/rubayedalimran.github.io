@@ -255,6 +255,20 @@
 
 <script src="js/data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" defer></script>
+<!-- Postprocessing for the 3D arc reactor's glow (Priority 2 visual upgrade).
+     Classic (non-module) example builds matching three@0.128.0, so they
+     attach straight onto the THREE namespace — no import maps needed.
+     initReactor3D() in main.js checks for THREE.EffectComposer before
+     using any of this; if these fail to load for any reason, the
+     reactor still renders (just without bloom), same safety-net
+     pattern as the rest of the 3D reactor code. -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/MaskPass.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js" defer></script>
 <script src="js/main.js"></script>
 </body>
 </html>
