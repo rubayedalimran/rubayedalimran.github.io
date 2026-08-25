@@ -1253,6 +1253,76 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* ============================================================
+   DEPTH & ATMOSPHERE (Priority 7)
+   ------------------------------------------------------------
+   Three pieces, all created/injected by initAtmosphere() in
+   main.js (no index.html changes needed):
+   - #bg-canvas gets a scroll-linked transform (parallax, slower
+     than foreground) — see .parallax-layer below.
+   - .vignette-overlay: a static, always-on soft edge darkening
+     to sell the "HUD lens" feel. No motion, so it's exempt from
+     the reduced-motion checks that gate the other two.
+   - .chroma-flash: a very brief red/cyan channel-offset flash,
+     triggered once per section reveal (see 'section:reveal'
+     custom event dispatched from initMisc's revealObserver).
+   - .hero-dust-canvas: slow, low-opacity ambient gold specks
+     confined to the hero section only.
+   ============================================================ */
+#bg-canvas {
+  will-change: transform;
+}
+
+.vignette-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(5, 6, 8, 0.5) 100%);
+}
+
+.chroma-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 41;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.chroma-flash::before,
+.chroma-flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.chroma-flash::before {
+  background: rgba(255, 30, 30, 0.3);
+  transform: translateX(-2px);
+}
+.chroma-flash::after {
+  background: rgba(60, 200, 255, 0.24);
+  transform: translateX(2px);
+}
+.chroma-flash.flash {
+  animation: chroma-flash-anim 0.45s ease-out;
+}
+@keyframes chroma-flash-anim {
+  0% { opacity: 0.45; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Motion-based atmosphere is skipped entirely by JS for these visitors
+     (see initAtmosphere), but keep a CSS-level belt-and-suspenders too. */
+  .chroma-flash { display: none; }
+}
+
+.hero-dust-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 900px) {
