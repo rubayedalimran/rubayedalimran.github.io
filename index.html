@@ -72,6 +72,11 @@
       <span class="corner tl"></span><span class="corner tr"></span>
       <span class="corner bl"></span><span class="corner br"></span>
     </div>
+    <!-- JARVIS-style rotating status readout (Priority 6) -->
+    <div class="jarvis-status" id="jarvis-status" aria-hidden="true">
+      <span class="jarvis-status-label">SYS.LOG</span>
+      <span class="jarvis-status-text" id="jarvis-status-text"></span>
+    </div>
     <div class="hero-grid">
       <div class="hero-text">
         <p class="eyebrow" id="hero-eyebrow"><span class="status-dot"></span><!-- injected --></p>
@@ -228,6 +233,18 @@
   <div class="modal-box">
     <button class="modal-close" id="modal-close" aria-label="Close project details">&times;</button>
     <div id="modal-content"><!-- injected --></div>
+  </div>
+</div>
+
+<!-- ============ KONAMI EASTER EGG OVERLAY (Priority 6) ============
+     Hidden by default. Triggered by main.js on ↑↑↓↓←→←→BA. Content
+     (title + log lines) comes from PORTFOLIO_DATA.easterEgg in data.js. -->
+<div class="konami-overlay" id="konami-overlay" aria-hidden="true">
+  <div class="konami-inner">
+    <div class="konami-flare" aria-hidden="true"></div>
+    <div class="konami-title" id="konami-title"></div>
+    <div class="konami-log" id="konami-log" aria-live="polite"></div>
+    <p class="konami-hint">PRESS ESC OR CLICK TO DISMISS</p>
   </div>
 </div>
 
