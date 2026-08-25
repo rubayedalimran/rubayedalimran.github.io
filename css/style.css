@@ -147,6 +147,41 @@ button { font-family: inherit; cursor: pointer; }
 .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
 .reveal.in-view { opacity: 1; transform: translateY(0); }
 
+/* HUD calibration: corner brackets "snap" into place like a reticle
+   locking on, staggered slightly per corner. Only applies to non-hero
+   sections (.reveal) — the hero's own corners stay always-visible. */
+.reveal .hud-frame .corner {
+  width: 0; height: 0;
+  transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.reveal.in-view .hud-frame .corner {
+  width: 26px;
+  height: 26px;
+}
+.reveal.in-view .hud-frame .corner.tl { transition-delay: 0s; }
+.reveal.in-view .hud-frame .corner.tr { transition-delay: 0.06s; }
+.reveal.in-view .hud-frame .corner.bl { transition-delay: 0.12s; }
+.reveal.in-view .hud-frame .corner.br { transition-delay: 0.18s; }
+
+/* HUD calibration: a brief scan-line sweep across section headings on reveal */
+.section-heading { position: relative; overflow: hidden; }
+.section-heading::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -60%;
+  width: 45%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent);
+  pointer-events: none;
+}
+.reveal.in-view .section-heading::after {
+  animation: heading-scan-sweep 0.9s ease-out 0.15s both;
+}
+@keyframes heading-scan-sweep {
+  from { left: -60%; }
+  to { left: 140%; }
+}
+
 /* Animated "power flowing" gradient line — used on key borders/edges */
 @keyframes power-flow {
   to { background-position: 200% 0; }
@@ -663,7 +698,7 @@ button { font-family: inherit; cursor: pointer; }
   background-size: 300% 100%;
   animation: power-flow 4s linear infinite;
   border-radius: 3px;
-  transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 1.1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ============================================================
@@ -706,7 +741,11 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: var(--radius);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --lift: 0px;
+  transform: perspective(800px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(var(--lift));
+  transition: transform 0.15s ease-out, border-color 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -722,12 +761,46 @@ button { font-family: inherit; cursor: pointer; }
   z-index: 2;
 }
 .project-card:hover {
-  transform: translateY(-6px);
+  --lift: -6px;
   border-color: var(--gold);
   box-shadow: 0 14px 32px rgba(0,0,0,0.4);
 }
 .project-body {
   background-image: var(--noise-metal);
+}
+
+/* Decorative "telemetry strip" — a thin animated readout that appears
+   on hover, reinforcing the engineering-instrument feel. Purely visual,
+   the bar heights/timings don't represent real data. */
+.telemetry-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+  margin-top: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.project-card:hover .telemetry-strip { opacity: 1; }
+.telemetry-strip span {
+  flex: 1;
+  transform-origin: bottom;
+  background: var(--gradient-power);
+  background-size: 100% 300%;
+  border-radius: 1px;
+  animation: telemetry-bar 1.1s ease-in-out infinite;
+}
+.telemetry-strip span:nth-child(1) { height: 35%; animation-delay: 0s; }
+.telemetry-strip span:nth-child(2) { height: 60%; animation-delay: 0.08s; }
+.telemetry-strip span:nth-child(3) { height: 90%; animation-delay: 0.16s; }
+.telemetry-strip span:nth-child(4) { height: 50%; animation-delay: 0.24s; }
+.telemetry-strip span:nth-child(5) { height: 75%; animation-delay: 0.32s; }
+.telemetry-strip span:nth-child(6) { height: 40%; animation-delay: 0.4s; }
+.telemetry-strip span:nth-child(7) { height: 65%; animation-delay: 0.48s; }
+.telemetry-strip span:nth-child(8) { height: 30%; animation-delay: 0.56s; }
+@keyframes telemetry-bar {
+  0%, 100% { transform: scaleY(0.6); }
+  50% { transform: scaleY(1); }
 }
 .project-thumb {
   aspect-ratio: 16/9;
@@ -820,7 +893,70 @@ button { font-family: inherit; cursor: pointer; }
 .modal-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.2rem; font-size: 0.85rem; color: var(--text-dim); }
 .modal-meta strong { color: var(--gold); display: block; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.2rem; }
 .modal-inner p.desc { color: var(--text-dim); margin-bottom: 1.4rem; }
-.modal-links { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+.modal-links { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.4rem; }
+
+/* Tabbed modal content: Overview / Specs / Gallery (Priority 5) */
+.modal-tabs {
+  display: flex;
+  gap: 1.4rem;
+  border-bottom: 1px solid var(--panel-border);
+  margin-top: 0.4rem;
+}
+.modal-tab {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font-label);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  padding: 0.7rem 0.1rem;
+  position: relative;
+  transition: color 0.2s;
+}
+.modal-tab:hover { color: var(--text); }
+.modal-tab.active { color: var(--gold); }
+.modal-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 4s linear infinite;
+}
+.modal-tab-panel { display: none; padding-top: 1.4rem; }
+.modal-tab-panel.active { display: block; }
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 0.88rem;
+}
+.spec-row:last-child { border-bottom: none; }
+.spec-row .spec-label {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.spec-row .spec-value { color: var(--text); text-align: right; }
+.modal-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+}
+.modal-gallery-grid img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--panel-border);
+}
 
 /* ============================================================
    TIMELINE
