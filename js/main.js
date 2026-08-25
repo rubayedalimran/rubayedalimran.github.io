@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (seen) {
       bootScreen.classList.add('boot-hidden');
-      window.requestIdleCallback ? window.requestIdleCallback(initReactor3D) : setTimeout(initReactor3D, 200);
+      window.requestIdleCallback ? window.requestIdleCallback(lazyInitHeavyFeatures) : setTimeout(lazyInitHeavyFeatures, 200);
       return;
     }
 
@@ -50,10 +50,19 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           bootScreen.classList.add('boot-hidden');
           sessionStorage.setItem('bootSeen', '1');
-          window.requestIdleCallback ? window.requestIdleCallback(initReactor3D) : setTimeout(initReactor3D, 200);
+          window.requestIdleCallback ? window.requestIdleCallback(lazyInitHeavyFeatures) : setTimeout(lazyInitHeavyFeatures, 200);
         }, 400);
       }
     }, 60);
+  }
+
+  // Groups all "not needed for first paint" inits behind the boot
+  // sequence's existing idle-callback trigger point (Priority 2's
+  // pattern, reused per the Priority 7 brief): the 3D reactor and the
+  // atmosphere layer (parallax/vignette/chroma-flash/hero dust).
+  function lazyInitHeavyFeatures() {
+    initReactor3D();
+    initAtmosphere();
   }
 
   /* ---------------------------------------------------------
@@ -183,6 +192,108 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     requestAnimationFrame(draw);
+  }
+
+  /* ---------------------------------------------------------
+     DEPTH & ATMOSPHERE (Priority 7)
+     Lazy-initialized via the same requestIdleCallback trigger point
+     as initReactor3D (see runBootSequence / lazyInitHeavyFeatures),
+     since none of this is needed for first paint. Every animated
+     piece is skipped outright under prefers-reduced-motion; only the
+     static vignette (no motion) still applies in that case.
+  --------------------------------------------------------- */
+  function initAtmosphere() {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // --- Vignette: static, always on, sells the "HUD lens" framing.
+    // Not gated by reduced-motion since there's no motion involved.
+    const vignette = document.createElement('div');
+    vignette.className = 'vignette-overlay';
+    vignette.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(vignette);
+
+    if (reduceMotion) return; // everything below this line is motion-based
+
+    // --- Background parallax: bg-canvas drifts slower than foreground
+    // scroll, cheap rAF-throttled transform (doesn't touch the canvas's
+    // own draw loop, just repositions the whole element).
+    const bgCanvas = document.getElementById('bg-canvas');
+    let ticking = false;
+    if (bgCanvas) {
+      window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          bgCanvas.style.transform = `translateY(${window.scrollY * -0.12}px)`;
+          ticking = false;
+        });
+      });
+    }
+
+    // --- Chromatic aberration flash: a brief red/cyan channel offset
+    // pulse, once per section reveal. Cheap — a single overlay element,
+    // class toggled on/off, no per-frame JS work.
+    const chroma = document.createElement('div');
+    chroma.className = 'chroma-flash';
+    chroma.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(chroma);
+    document.addEventListener('section:reveal', () => {
+      chroma.classList.remove('flash');
+      void chroma.offsetWidth; // restart animation
+      chroma.classList.add('flash');
+    });
+
+    // --- Ambient hero dust: a few dozen tiny, very slow, low-opacity
+    // gold specks drifting within the hero section only. Separate
+    // lightweight canvas so it never interferes with the cursor-fx or
+    // bg-canvas draw loops.
+    const heroSection = document.getElementById('hero');
+    if (heroSection) {
+      const dustCanvas = document.createElement('canvas');
+      dustCanvas.className = 'hero-dust-canvas';
+      dustCanvas.setAttribute('aria-hidden', 'true');
+      heroSection.insertBefore(dustCanvas, heroSection.firstChild);
+
+      const ctx = dustCanvas.getContext('2d');
+      let w, h;
+      function resize() {
+        w = dustCanvas.width = heroSection.clientWidth;
+        h = dustCanvas.height = heroSection.clientHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      const DUST_COUNT = 34;
+      const specks = Array.from({ length: DUST_COUNT }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 0.6 + Math.random() * 1.4,
+        vy: -0.05 - Math.random() * 0.08, // slow drift upward
+        vx: (Math.random() - 0.5) * 0.03,
+        baseAlpha: 0.12 + Math.random() * 0.22,
+        phase: Math.random() * Math.PI * 2,
+      }));
+
+      let t = 0;
+      function draw() {
+        requestAnimationFrame(draw);
+        t += 0.01;
+        ctx.clearRect(0, 0, w, h);
+        specks.forEach((s) => {
+          s.x += s.vx;
+          s.y += s.vy;
+          if (s.y < -4) { s.y = h + 4; s.x = Math.random() * w; }
+          if (s.x < -4) s.x = w + 4;
+          if (s.x > w + 4) s.x = -4;
+          const flicker = 0.75 + 0.25 * Math.sin(t + s.phase);
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 215, 0, ${s.baseAlpha * flicker})`;
+          ctx.fill();
+        });
+      }
+      requestAnimationFrame(draw);
+    }
   }
 
   /* ---------------------------------------------------------
@@ -1015,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (entry.isIntersecting) {
           entry.target.classList.add('in-view');
           revealObs.unobserve(entry.target);
+          document.dispatchEvent(new CustomEvent('section:reveal'));
         }
       });
     }, { threshold: 0.12 });
