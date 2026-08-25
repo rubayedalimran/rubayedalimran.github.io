@@ -70,6 +70,8 @@ html { scroll-behavior: smooth; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+  .hero-reactor-wrap.reactor-3d-active .hero-reactor-svg { display: block; }
+  .hero-reactor-wrap.reactor-3d-active .hero-reactor-3d { display: none; }
 }
 
 body {
@@ -478,8 +480,26 @@ button { font-family: inherit; cursor: pointer; }
   align-items: center;
   gap: 1rem;
   justify-self: center;
+  position: relative;
 }
 .hero-reactor-svg { width: min(340px, 80vw); height: auto; cursor: pointer; }
+
+/* 3D reactor mount — hidden until Three.js successfully initializes;
+   the SVG above remains the default so there is always a working fallback
+   for prefers-reduced-motion, WebGL failure, or a slow/blocked CDN load. */
+.hero-reactor-3d {
+  display: none;
+  width: min(340px, 80vw);
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+}
+.hero-reactor-3d canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.hero-reactor-wrap.reactor-3d-active .hero-reactor-svg { display: none; }
+.hero-reactor-wrap.reactor-3d-active .hero-reactor-3d { display: block; }
 .hr-ring { fill: none; stroke-width: 1.5; opacity: 0.5; }
 .hr-ring-1 { stroke: var(--red); stroke-dasharray: 4 10; animation: spin-cw 30s linear infinite; }
 .hr-ring-2 { stroke: var(--gold); stroke-dasharray: 2 6; animation: spin-ccw 22s linear infinite; }
