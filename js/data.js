@@ -336,6 +336,21 @@ const PORTFOLIO_DATA = {
     ],
   },
 
+  // ---------------------------------------------------------
+  // GITHUB (Priority 8 — live stats)
+  // Powers the "GitHub Telemetry" panel in About and the footer's
+  // "Last calibrated" stamp, both pulled from GitHub's public REST API
+  // at runtime (no auth needed, no server). If the API is unreachable
+  // or rate-limited, both features degrade gracefully — see
+  // initGithubStats() in main.js.
+  // repo: used only for the "Last calibrated" commit date; leave as
+  // "" to skip that call and just show the profile stats.
+  // ---------------------------------------------------------
+  github: {
+    username: "rubayedalimran",
+    repo: "rubayedalimran.github.io",
+  },
+
   footer: {
     text: "Designed & built by Rubayed Al Imran.",
   },
