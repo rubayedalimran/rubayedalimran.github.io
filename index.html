@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alex Rhodes — Mechanical Engineer</title>
+<meta name="description" content="Mechanical Engineering student portfolio — CAD, robotics, manufacturing, and design projects." />
+
+<!-- Open Graph / social preview -->
+<meta property="og:title" content="Alex Rhodes — Mechanical Engineer" />
+<meta property="og:description" content="Mechanical Engineering student portfolio — CAD, robotics, manufacturing, and design projects." />
+<meta property="og:image" content="assets/img/og-cover.jpg" />
+<meta property="og:type" content="website" />
+
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+
+<!-- Fonts: Orbitron (display/HUD), Rajdhani (labels), Inter (body), JetBrains Mono (data/specs) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ============ BOOT / LOADER OVERLAY ============ -->
+<div id="boot-screen" aria-hidden="true">
+  <div class="boot-inner">
+    <div class="boot-reactor">
+      <svg viewBox="0 0 200 200" class="reactor-svg">
+        <circle class="ring ring-outer" cx="100" cy="100" r="90"/>
+        <circle class="ring ring-mid" cx="100" cy="100" r="65"/>
+        <circle class="ring ring-inner" cx="100" cy="100" r="40"/>
+        <circle class="core" cx="100" cy="100" r="18"/>
+      </svg>
+    </div>
+    <div class="boot-log" id="boot-log"></div>
+    <div class="boot-bar-track"><div class="boot-bar-fill" id="boot-bar-fill"></div></div>
+  </div>
+</div>
+
+<!-- ============ CUSTOM CURSOR ============ -->
+<div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+<div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+
+<!-- ============ SCROLL PROGRESS ============ -->
+<div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
+<!-- ============ BACKGROUND GRID CANVAS ============ -->
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+<!-- ============ NAV ============ -->
+<header class="site-header" id="site-header">
+  <nav class="nav" aria-label="Primary">
+    <a href="#hero" class="nav-logo">
+      <span class="logo-mark">AR</span>
+      <span class="logo-text">ALEX<span class="accent-gold">.RHODES</span></span>
+    </a>
+    <ul class="nav-links" id="nav-links"><!-- injected --></ul>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<main id="main-content">
+
+  <!-- ============ HERO ============ -->
+  <section id="hero" class="section hero-section">
+    <div class="hud-frame" aria-hidden="true">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+    </div>
+    <div class="hero-grid">
+      <div class="hero-text">
+        <p class="eyebrow" id="hero-eyebrow"><span class="status-dot"></span><!-- injected --></p>
+        <h1 class="hero-name" id="hero-name"><!-- injected --></h1>
+        <p class="hero-role"><span id="hero-role-typed"></span><span class="type-cursor">|</span></p>
+        <p class="hero-subtext" id="hero-subtext"><!-- injected --></p>
+        <div class="hero-ctas" id="hero-ctas"><!-- injected --></div>
+        <div class="hero-stats" id="hero-stats"><!-- injected --></div>
+      </div>
+      <div class="hero-reactor-wrap">
+        <svg viewBox="0 0 300 300" class="hero-reactor-svg" id="hero-reactor" role="img" aria-label="Animated arc reactor graphic">
+          <circle class="hr-ring hr-ring-1" cx="150" cy="150" r="140"/>
+          <circle class="hr-ring hr-ring-2" cx="150" cy="150" r="115"/>
+          <circle class="hr-ring hr-ring-3" cx="150" cy="150" r="90"/>
+          <g class="hr-spokes">
+            <line x1="150" y1="30" x2="150" y2="60"/>
+            <line x1="150" y1="240" x2="150" y2="270"/>
+            <line x1="30" y1="150" x2="60" y2="150"/>
+            <line x1="240" y1="150" x2="270" y2="150"/>
+          </g>
+          <circle class="hr-core" cx="150" cy="150" r="45"/>
+          <circle class="hr-core-inner" cx="150" cy="150" r="26"/>
+        </svg>
+        <span class="reactor-caption">CLICK TO ACTIVATE</span>
+      </div>
+    </div>
+    <a href="#about" class="scroll-cue" aria-label="Scroll to About section">
+      <span></span>SCROLL
+    </a>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="about" class="section about-section reveal">
+    <p class="eyebrow"><span class="status-dot"></span><span id="about-eyebrow"></span></p>
+    <h2 class="section-heading" id="about-heading"></h2>
+    <div class="about-grid">
+      <div class="about-photo-wrap">
+        <div class="about-photo-frame">
+          <img id="about-photo" src="" alt="Portrait" />
+        </div>
+      </div>
+      <div class="about-body">
+        <div id="about-paragraphs"></div>
+        <div class="quick-facts" id="quick-facts"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SKILLS / SYSTEMS ============ -->
+  <section id="skills" class="section skills-section reveal">
+    <p class="eyebrow"><span class="status-dot"></span><span id="skills-eyebrow"></span></p>
+    <h2 class="section-heading">Skill Systems</h2>
+    <div class="skills-grid" id="skills-grid"><!-- injected --></div>
+  </section>
+
+  <!-- ============ PROJECTS ============ -->
+  <section id="projects" class="section projects-section reveal">
+    <p class="eyebrow"><span class="status-dot"></span>MISSION LOG</p>
+    <h2 class="section-heading">Projects</h2>
+    <div class="project-filters" id="project-filters"><!-- injected --></div>
+    <div class="projects-grid" id="projects-grid"><!-- injected --></div>
+  </section>
+
+  <!-- ============ TIMELINE ============ -->
+  <section id="timeline" class="section timeline-section reveal">
+    <p class="eyebrow"><span class="status-dot"></span>FLIGHT RECORDER</p>
+    <h2 class="section-heading">Education &amp; Experience</h2>
+    <div class="timeline-track" id="timeline-track"><!-- injected --></div>
+  </section>
+
+  <!-- ============ CERTIFICATIONS ============ -->
+  <section id="certifications" class="section certs-section reveal">
+    <p class="eyebrow"><span class="status-dot"></span>CLEARANCE LEVEL</p>
+    <h2 class="section-heading">Certifications &amp; Achievements</h2>
+    <div class="certs-grid" id="certs-grid"><!-- injected --></div>
+  </section>
+
+  <!-- ============ TESTIMONIALS ============ -->
+  <section id="testimonials" class="section testimonials-section reveal">
+    <p class="eyebrow"><span class="status-dot"></span>INCOMING TRANSMISSIONS</p>
+    <div class="testimonial-carousel" id="testimonial-carousel"><!-- injected --></div>
+    <div class="testimonial-dots" id="testimonial-dots"></div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section id="contact" class="section contact-section reveal">
+    <p class="eyebrow"><span class="status-dot"></span>OPEN CHANNEL</p>
+    <h2 class="section-heading" id="contact-heading"></h2>
+    <p class="contact-subtext" id="contact-subtext"></p>
+    <div class="contact-grid">
+      <form id="contact-form" class="contact-form">
+        <label>
+          <span>Name</span>
+          <input type="text" name="name" required />
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          <span>Message</span>
+          <textarea name="message" rows="5" required></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">
+          <span>Transmit Message</span>
+        </button>
+        <p class="form-status" id="form-status" role="status"></p>
+      </form>
+      <div class="contact-side">
+        <a class="email-link" id="contact-email-link" href="#"></a>
+        <div class="social-links" id="social-links"><!-- injected --></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p id="footer-text"></p>
+  <p class="footer-meta">Built with vanilla HTML/CSS/JS · Hosted on GitHub Pages</p>
+</footer>
+
+<!-- ============ PROJECT MODAL ============ -->
+<div class="modal-overlay" id="project-modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-close" aria-label="Close project details">&times;</button>
+    <div id="modal-content"><!-- injected --></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
