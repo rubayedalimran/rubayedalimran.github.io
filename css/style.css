@@ -6,8 +6,8 @@
   /* --- Palette --- */
   --bg:            #0a0c10;
   --bg-alt:        #10131a;
-  --panel:         #151922;
-  --panel-border:  #262c38;
+  --panel:         var(--gunmetal-dark);
+  --panel-border:  #333a46;
   --grid-line:     rgba(255, 255, 255, 0.035);
 
   --red:           #d62828;
@@ -18,6 +18,14 @@
   --gold-bright:   #ffd166;
   --gold-dark:     #8a5f00;
 
+  /* --- Layered "powered metal" accents (Priority 1 upgrade) --- */
+  --red-core:       #ff1e1e;  /* hot — active/glowing states only: buttons, live indicators */
+  --red-deep:       #8b0000;  /* structural — borders, dividers */
+  --gold-hot:       #ffd700;  /* highlights, hover states */
+  --gold-brushed:   #c99700;  /* resting gold — less saturated so gold-hot pops by contrast */
+  --gunmetal:       #2a2e35;  /* panel surfaces, brushed metal read */
+  --gunmetal-dark:  #1c1f26;
+
   --text:          #f1f1f1;
   --text-dim:      #9aa1ab;
   --text-faint:    #5c6270;
@@ -25,7 +33,17 @@
   --glow-red:      rgba(214, 40, 40, 0.55);
   --glow-gold:     rgba(255, 184, 0, 0.55);
 
-  --gradient-power: linear-gradient(135deg, var(--red) 0%, var(--gold) 100%);
+  --gradient-power: linear-gradient(90deg, var(--red-deep), var(--red-core), var(--gold-brushed), var(--gold-hot), var(--red-deep));
+  --gradient-power-static: linear-gradient(135deg, var(--red) 0%, var(--gold) 100%);
+
+  /* subtle brushed-metal noise, layered onto panel surfaces */
+  --noise-metal: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 
   /* --- Type --- */
   --font-display: 'Orbitron', sans-serif;
@@ -104,7 +122,7 @@ button { font-family: inherit; cursor: pointer; }
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--red-bright);
+  background: var(--red-core);
   box-shadow: 0 0 8px var(--glow-red);
   animation: pulse-dot 1.8s ease-in-out infinite;
   flex-shrink: 0;
@@ -126,6 +144,19 @@ button { font-family: inherit; cursor: pointer; }
 /* scroll-reveal (JS toggles .in-view) */
 .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
 .reveal.in-view { opacity: 1; transform: translateY(0); }
+
+/* Animated "power flowing" gradient line — used on key borders/edges */
+@keyframes power-flow {
+  to { background-position: 200% 0; }
+}
+.power-flow-edge {
+  background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .power-flow-edge { animation: none; background-position: 0 0; }
+}
 
 /* ============================================================
    CUSTOM CURSOR
@@ -162,6 +193,8 @@ button { font-family: inherit; cursor: pointer; }
   height: 3px;
   width: 0%;
   background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 5s linear infinite;
   box-shadow: 0 0 10px var(--glow-red);
   z-index: 1000;
   transition: width 0.1s linear;
@@ -228,6 +261,8 @@ button { font-family: inherit; cursor: pointer; }
   height: 100%;
   width: 0%;
   background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 3s linear infinite;
   transition: width 0.2s ease;
 }
 
@@ -296,6 +331,8 @@ button { font-family: inherit; cursor: pointer; }
   left: 0; bottom: 0;
   height: 2px; width: 0;
   background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 4s linear infinite;
   transition: width 0.25s;
 }
 .nav-links a:hover,
@@ -327,13 +364,14 @@ button { font-family: inherit; cursor: pointer; }
 .corner {
   position: absolute;
   width: 26px; height: 26px;
-  border-color: var(--red);
+  border-color: var(--red-deep);
   border-style: solid;
-  opacity: 0.6;
+  opacity: 0.75;
+  filter: drop-shadow(0 0 4px var(--glow-red));
 }
 .corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
-.corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-color: var(--gold); }
-.corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-color: var(--gold); }
+.corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-color: var(--gold-brushed); filter: drop-shadow(0 0 4px var(--glow-gold)); }
+.corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-color: var(--gold-brushed); filter: drop-shadow(0 0 4px var(--glow-gold)); }
 .corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
 
 /* ============================================================
@@ -554,9 +592,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 .skill-card {
   background: var(--panel);
+  background-image: var(--noise-metal);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   padding: 1.8rem;
+  position: relative;
 }
 .skill-card h3 {
   font-family: var(--font-label);
@@ -589,6 +629,8 @@ button { font-family: inherit; cursor: pointer; }
   height: 100%;
   width: 0%;
   background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 4s linear infinite;
   border-radius: 3px;
   transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -636,11 +678,25 @@ button { font-family: inherit; cursor: pointer; }
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+.project-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gradient-power);
+  background-size: 300% 100%;
+  animation: power-flow 5s linear infinite;
+  z-index: 2;
 }
 .project-card:hover {
   transform: translateY(-6px);
   border-color: var(--gold);
   box-shadow: 0 14px 32px rgba(0,0,0,0.4);
+}
+.project-body {
+  background-image: var(--noise-metal);
 }
 .project-thumb {
   aspect-ratio: 16/9;
@@ -703,6 +759,7 @@ button { font-family: inherit; cursor: pointer; }
 .modal-overlay.open { opacity: 1; visibility: visible; }
 .modal-box {
   background: var(--panel);
+  background-image: var(--noise-metal);
   border: 1px solid var(--panel-border);
   max-width: 700px;
   width: 100%;
@@ -793,6 +850,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .cert-card {
   background: var(--panel);
+  background-image: var(--noise-metal);
   border: 1px solid var(--panel-border);
   padding: 1.4rem;
   border-radius: var(--radius);
@@ -806,6 +864,14 @@ button { font-family: inherit; cursor: pointer; }
   position: absolute; top: 0; left: 0;
   width: 4px; height: 100%;
   background: var(--gradient-power);
+  background-size: 100% 300%;
+  animation: power-flow-vertical 5s linear infinite;
+}
+@keyframes power-flow-vertical {
+  to { background-position: 0 200%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cert-card::before { animation: none; }
 }
 .cert-name { font-weight: 600; font-size: 0.98rem; margin-bottom: 0.3rem; }
 .cert-issuer { color: var(--text-dim); font-size: 0.82rem; }
