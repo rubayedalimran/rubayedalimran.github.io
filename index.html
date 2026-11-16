@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio — The Workshop</title>
+  <meta name="description" content="Mechanical engineering portfolio: robotics, CAD design and builds.">
+  <meta name="theme-color" content="#0a0806">
+  <script>
+    document.documentElement.classList.add("js");
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Michroma&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip" href="#about">Skip to content</a>
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="reticle" aria-hidden="true"></div>
+  <aside class="hud" aria-hidden="true">
+    <div class="hud-rail" id="hud-rail"><b id="hud-mark"></b></div>
+    <p class="hud-bl"><span id="hud-sector"></span><span id="hud-depth"></span></p>
+    <p class="hud-br"><span id="hud-time"></span><span id="hud-place"></span></p>
+  </aside>
+
+  <div class="boot" id="boot" aria-hidden="true">
+    <div>
+      <p>POWER BUS <i>OK</i></p>
+      <p>MOTION CONTROL <i>OK</i></p>
+      <p>BUILD ARCHIVE <i>LOADED</i></p>
+      <p class="boot-go">WORKSHOP ONLINE</p>
+    </div>
+  </div>
+
+  <header class="bar">
+    <a class="bar-name" href="#top"><span id="bar-gear"></span><span data-fill="name"></span></a>
+    <nav aria-label="Sections">
+      <a href="#about">Origin</a>
+      <a href="#builds">Hangar</a>
+      <a href="#arsenal">Arsenal</a>
+      <a href="#proof">Proof</a>
+      <a href="#log">Log</a>
+      <a href="#contact">Transmit</a>
+    </nav>
+    <div class="bar-progress" aria-hidden="true"><i id="progress"></i></div>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="hero-text">
+        <h1 data-fill="name"></h1>
+        <p class="hero-title" data-fill="title"></p>
+        <p class="hero-pitch" data-fill="pitch"></p>
+        <p class="hero-term" id="term" aria-hidden="true"></p>
+        <div class="actions">
+          <a class="btn btn-go" href="#builds">Enter the hangar</a>
+          <a class="btn" href="#log">Résumé</a>
+        </div>
+      </div>
+      <div class="hero-core" id="core">
+        <div id="gear"></div>
+        <p class="callout c1"><b>Ring</b> 48 teeth, fixed</p>
+        <p class="callout c2"><b>Planets</b> 3 × 12 teeth</p>
+        <p class="callout c3"><b>Sun</b> 24 teeth, 3 : 1 reduction</p>
+      </div>
+      <p class="hero-hint">Scroll to take it apart</p>
+    </section>
+
+    <section class="sec" id="about">
+      <h2 data-rv>Origin file</h2>
+      <div class="sheet" data-rv="wipe">
+        <div class="sheet-zones" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div>
+        <figure class="frame about-photo" id="photo"></figure>
+        <div id="bio" class="prose"></div>
+        <dl id="facts" class="titleblock"></dl>
+      </div>
+    </section>
+
+    <section class="hangar" id="builds">
+      <div class="hangar-pin">
+        <div class="hangar-floor" aria-hidden="true"></div>
+        <div class="ring" id="ring" aria-hidden="true"></div>
+        <div class="hangar-head">
+          <div>
+            <h2 data-rv>The hangar</h2>
+            <p class="lede" id="hangar-lede"></p>
+          </div>
+          <div class="filters" id="filters" role="group" aria-label="Filter builds by type"></div>
+        </div>
+        <article class="bay" id="bay" aria-live="polite"></article>
+        <div class="hangar-nav">
+          <button class="btn" type="button" id="prev">Previous</button>
+          <span id="count"></span>
+          <button class="btn" type="button" id="next">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="arsenal">
+      <h2 data-rv>Arsenal</h2>
+      <p class="lede" data-rv>The tools I design, build and program with.</p>
+      <div class="loadout" id="loadout" data-rv>
+        <div class="loadout-side">
+          <div class="filters" id="cap-filters" role="group" aria-label="Filter tools by type"></div>
+          <div class="readout-panel" id="cap-read" aria-live="polite"></div>
+        </div>
+        <div class="hive" id="caps"></div>
+      </div>
+    </section>
+
+    <section class="sec" id="proof">
+      <h2 data-rv>Hall of proof</h2>
+      <p class="lede" data-rv>Awards, certificates and moments worth framing.</p>
+      <ul class="wall" id="wall"></ul>
+    </section>
+
+    <section class="sec" id="log">
+      <div class="sec-head" data-rv>
+        <div>
+          <h2>Flight log</h2>
+          <p class="lede">Education and experience, in order.</p>
+        </div>
+        <a class="btn btn-go" id="resume-dl" href="#" download>Download résumé</a>
+      </div>
+      <div class="log">
+        <div class="rack" id="rack" aria-hidden="true"><div id="pinion"></div></div>
+        <ol class="timeline" id="timeline"></ol>
+      </div>
+    </section>
+
+    <section class="sec contact" id="contact">
+      <div class="rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <h2 data-rv>Transmit</h2>
+      <p class="lede" data-rv>The fastest way to reach me is email. I reply within a day.</p>
+      <div class="contact-row" data-rv>
+        <a class="contact-mail" id="mail" href="#"></a>
+        <button class="btn" id="copy" type="button">Copy address</button>
+      </div>
+      <ul class="links" id="links"></ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span id="foot-name"></span>
+  </footer>
+
+  <dialog class="dossier" id="dossier" aria-labelledby="dossier-title">
+    <div class="dossier-in" id="dossier-in"></div>
+  </dialog>
+
+  <script src="content/data.js"></script>
+  <script src="js/placeholders.js"></script>
+  <script src="js/main.js"></script>
+  <!-- 3D engine and glow effect. If these fail to load, the site still works with the flat gear. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="js/scene3d.js"></script>
+  <script src="js/background.js"></script>
+</body>
+</html>
