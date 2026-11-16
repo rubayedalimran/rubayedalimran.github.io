@@ -543,7 +543,6 @@ h2, .codename {
 [data-theme="reactor"] .sheet, [data-theme="reactor"] .dossier, [data-theme="reactor"] .readout-panel { border-image: linear-gradient(135deg, #ffffff, rgba(95, 224, 255, 0.3) 28%, rgba(255, 165, 92, 0.8) 52%, rgba(95, 224, 255, 0.3) 76%, #c9f6ff) 1; }
 [data-theme="reactor"] .bar { border-image: linear-gradient(90deg, transparent, rgba(95, 224, 255, 0.7) 30%, rgba(255, 165, 92, 0.6) 70%, transparent) 1; }
 [data-theme="reactor"] .build-meta span:first-child, [data-theme="reactor"] .rd-cat, [data-theme="reactor"] .hero-term::before { color: var(--hot); }
-[data-theme="reactor"] .coil:nth-child(3n) { fill: rgba(255, 165, 92, 0.3); }
 [data-theme="reactor"] .hex.on { background: linear-gradient(135deg, #ffffff, #5fe0ff); }
 [data-theme="reactor"] .timeline time, [data-theme="reactor"] .titleblock dt { color: var(--amber); }
 .themes { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; }
@@ -594,8 +593,6 @@ h2, .codename {
    HANGAR RING — now an energy reactor: coil blocks, a racing pulse, a breathing glow
    ========================================================================== */
 .ring::before { content: ""; position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(circle, transparent 52%, rgba(var(--red-rgb), 0.28) 66%, rgba(var(--gold-rgb), 0.2) 76%, transparent 84%); }
-.coil { fill: rgba(var(--gold-rgb), 0.1); stroke-width: 1.2; }
-.coil:nth-child(3n) { fill: rgba(var(--red-rgb), 0.3); }
 .pulse { stroke: var(--hi); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 90 600; fill: none; filter: drop-shadow(0 0 8px var(--hi)); }
 .pulse.b { stroke: var(--hot); stroke-dasharray: 40 512; }
 @keyframes race { to { stroke-dashoffset: -2760; } }
@@ -613,3 +610,168 @@ h2, .codename {
   .loadout-side { position: static; }
   .readout-panel { min-height: 0; }
 }
+
+/* ---------- hangar reactor, realistic build ---------- */
+.rx-rim { stroke: rgba(var(--bg-rgb), 0.95); }
+.rx-bolt { fill: var(--hi); stroke: none; opacity: 0.75; }
+.rx-glow { stroke: rgba(var(--ice-rgb), 0.55); }
+.rx-line { stroke: #fff; filter: drop-shadow(0 0 6px rgba(var(--ice-rgb), 1)); }
+.coil { fill: rgba(var(--bg-rgb), 0.92); stroke: var(--hi); stroke-width: 1.4; }
+.wind { stroke: var(--hot); stroke-width: 3.4; stroke-linecap: round; opacity: 0.9; }
+.clamp { stroke: var(--hi); stroke-width: 4; stroke-linecap: square; }
+.rx-hub { stroke: rgba(var(--gold-rgb), 0.55); }
+:root:not([data-theme]) .wind { stroke: #d9843a; }   /* copper wire in the crimson and gold version */
+@keyframes flicker { 0%, 100% { opacity: 0.75; } 45% { opacity: 1; } 55% { opacity: 0.6; } 70% { opacity: 0.95; } }
+@media (prefers-reduced-motion: no-preference) { .rx-glow { animation: flicker 2.6s ease-in-out infinite; } }
+
+/* ---------- real pictures: never cropped, small ones kept crisp, certificates on white ---------- */
+.bay-media > img, .dossier .frame > img { object-fit: cover; background: #fff; }
+.dossier .frame > img { cursor: zoom-in; }
+.frame > img.small { object-fit: contain; background: #fff; padding: 6%; }
+.frame > .doc { display: block; }
+.doc > .ph, .doc > img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #fff; }
+.doc > .ph { background: var(--bg-2); }
+.wall .frame > .doc { aspect-ratio: auto; }
+.zoom { padding: 0; border: 1px solid var(--line-2); background: #fff; max-width: 96vw; max-height: 94vh; cursor: zoom-out; }
+.zoom img { display: block; max-width: 96vw; max-height: 94vh; }
+.zoom::backdrop { background: rgba(3, 3, 5, 0.88); }
+.filters { row-gap: 0.4rem; }
+
+/* ---------- tags for what a project demonstrates; sheet without a portrait ---------- */
+.chips { list-style: none; margin: 1rem 0 1.25rem; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chips li { font: 500 0.8125rem var(--body); color: var(--hi); padding: 0.25rem 0.7rem; border: 1px solid var(--line-2); background: rgba(var(--gold-rgb), 0.08); clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.sheet.no-photo { grid-template-columns: 1fr; }
+.sheet.no-photo .prose { max-width: 72ch; padding: 0.5rem 0 1rem; }
+/* project pictures sit in a slim bezel so the white studio background reads as a deliberate panel */
+.bay-media, .dossier .frame { padding: 5px; }
+.bay-media > img, .dossier .frame > img { box-shadow: 0 0 0 1px rgba(var(--gold-rgb), 0.5), inset 0 0 60px rgba(0, 0, 0, 0.06); }
+
+/* ---------- hangar text never collides with the filters or the buttons ---------- */
+.bay { overflow: hidden; }
+.bay-sum { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.bay .build-stat { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+@media (max-height: 760px) {
+  .hangar-pin { gap: 0.6rem; padding-top: 4.25rem; padding-bottom: 1rem; }
+  .hangar-head .lede { display: none; }
+  .codename { font-size: clamp(1.5rem, 3.2vw, 2.4rem); }
+  .bay-title { margin: 0.35rem 0 0.6rem; }
+  .bay-sum { -webkit-line-clamp: 2; margin-bottom: 0.6rem; }
+  .bay .build-stat { margin-bottom: 0.9rem; }
+}
+
+/* ==========================================================================
+   HALL OF PROOF — a credential vault: a list on the left, a scanning screen on the right
+   ========================================================================== */
+.vault { display: grid; grid-template-columns: minmax(0, 23rem) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3.5rem); align-items: start; }
+.vault-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.vault-list button {
+  width: 100%; display: grid; grid-template-columns: auto 1fr auto; gap: 0.9rem; align-items: center; text-align: left;
+  padding: 0.85rem 1rem; min-height: 3.25rem; cursor: pointer; border: 0;
+  background: rgba(var(--bg-rgb), 0.6); box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink-2); font: 500 0.9375rem/1.3 var(--body); clip-path: var(--notch);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  transition: color 0.25s, background 0.25s, box-shadow 0.25s, translate 0.35s var(--ease);
+}
+.vault-list button i { font: 500 0.8125rem var(--mono); font-style: normal; color: var(--amber); }
+.vault-list button small { font: 500 0.75rem var(--mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.vault-list button:hover { color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
+.vault-list button[aria-current="true"] {
+  color: #fff; translate: 0.6rem 0;
+  background: linear-gradient(90deg, rgba(var(--red-rgb), 0.5), rgba(var(--gold-rgb), 0.14) 70%, rgba(var(--bg-rgb), 0.6));
+  box-shadow: inset 0 0 0 1px var(--hi), inset 4px 0 0 var(--hot), 0 10px 30px -12px rgba(var(--red-rgb), 0.9);
+}
+.vault-list button[aria-current="true"] i { color: var(--hot); }
+.vault-screen {
+  position: relative; aspect-ratio: 1.414; overflow: hidden; background: #0c0b0e;
+  border: 1px solid transparent; border-image: linear-gradient(135deg, var(--hi), rgba(var(--gold-rgb), 0.25) 30%, rgba(var(--red-rgb), 0.8) 55%, rgba(var(--gold-rgb), 0.25) 78%, var(--hi)) 1;
+  box-shadow: 0 34px 90px -34px rgba(var(--red-rgb), 0.85), 0 0 0 6px rgba(var(--bg-rgb), 0.6), 0 0 0 7px var(--line);
+}
+#vault-stack, .vault-item { position: absolute; inset: 0; }
+.vault-item { opacity: 0; clip-path: inset(0 0 100% 0); transition: opacity 0.35s ease, clip-path 0s 0.35s; }
+.vault-item.on { opacity: 1; clip-path: inset(0); transition: clip-path 0.8s var(--ease), opacity 0.25s ease; }
+.vault-item .doc, .vault-item .doc > img, .vault-item .doc > .ph, .vault-item > img, .vault-item > .ph { display: block; width: 100%; height: 100%; aspect-ratio: auto; object-fit: contain; }
+.vault-item .doc > img, .vault-item > img { background: #fff; }
+.vault-item .ph { color: var(--amber); background: var(--bg-2); }
+.vault-scan { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; background: linear-gradient(transparent, rgba(var(--red-rgb), 0.16) 47%, rgba(var(--gold-rgb), 0.55) 50%, rgba(var(--red-rgb), 0.16) 53%, transparent) 0 -60% / 100% 26% no-repeat; }
+.vault-screen::before, .vault-screen::after { content: ""; position: absolute; width: 34px; height: 34px; z-index: 2; pointer-events: none; }
+.vault-screen::before { left: 10px; top: 10px; border-left: 2px solid var(--hot); border-top: 2px solid var(--hot); }
+.vault-screen::after { right: 10px; bottom: 10px; border-right: 2px solid var(--hot); border-bottom: 2px solid var(--hot); }
+.vault-cap { margin-top: 1.4rem; display: grid; gap: 0.4rem; justify-items: start; }
+.vault-title { margin: 0; font: 400 clamp(1.15rem, 2.4vw, 1.75rem)/1.2 var(--title); color: var(--ink); }
+.vault-meta { margin: 0 0 0.6rem; display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; font: 500 0.8125rem var(--mono); letter-spacing: 0.06em; color: var(--ink-2); }
+.vault-meta span { width: 1px; background: var(--line-2); }
+@keyframes vscan { from { background-position: 0 -60%; } to { background-position: 0 170%; } }
+@media (prefers-reduced-motion: no-preference) { .vault-scan { animation: vscan 4.2s linear infinite; } }
+@media (prefers-reduced-motion: reduce) { .vault-item, .vault-item.on { transition: none; } }
+@media (max-width: 60rem) {
+  .vault { grid-template-columns: 1fr; }
+  .vault-view { order: -1; }
+  .vault-list button[aria-current="true"] { translate: 0 0; }
+}
+
+/* videos in a project dossier, and non-certificate pictures in the vault */
+.frame > video { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: contain; background: #000; }
+.vault-item > img { background: #0c0b0e; }
+
+/* ==========================================================================
+   PERFORMANCE. Same look, cheaper to draw. Each effect below used to make the
+   browser repaint a large area every frame; it now only moves or fades a
+   ready-made layer, which the graphics card does almost for free.
+   Keep this block last in the file.
+   ========================================================================== */
+/* Frosted glass over a moving 3D scene has to re-blur the scene every frame. The slim top bar keeps it;
+   the large panels use dense tinted glass instead, which looks the same against the dark scene. */
+.sheet, .pegboard, .dossier, .shelf li, .readout-panel, .vault-list button { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.dossier::backdrop { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(4, 3, 4, 0.93); }
+.sheet, .readout-panel { background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.1), rgba(var(--bg-rgb), 0.9) 40%, rgba(var(--red-rgb), 0.1)), rgba(var(--bg-rgb), 0.88); }
+.dossier { background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.08), var(--bg-2) 40%, rgba(var(--red-rgb), 0.08)), var(--bg-2); }
+.vault-list button { background: rgba(var(--bg-rgb), 0.88); }
+
+/* honeycomb pulse: a fade instead of a brightness filter */
+@keyframes hexfade { 0%, 100% { opacity: 0.86; } 50% { opacity: 1; } }
+.hex { animation: none; }
+.hex:hover, .hex.on, .hex:focus-visible { opacity: 1; }
+
+/* picture scan beam: a bar that slides, instead of a repainted gradient */
+.frame { overflow: hidden; }
+.frame::before { inset: 6px 6px auto 6px; height: 30%; mix-blend-mode: screen; will-change: transform; transform: translateY(-120%);
+  background: linear-gradient(transparent, rgba(var(--ice-rgb), 0.34) 46%, rgba(255, 255, 255, 0.55) 50%, rgba(var(--ice-rgb), 0.34) 54%, transparent); animation: none; }
+@keyframes beam { 0%, 55% { transform: translateY(-120%); } 100% { transform: translateY(380%); } }
+
+/* hangar floor: the grid slides as a layer */
+@keyframes floorslide { from { transform: perspective(520px) rotateX(64deg) translateY(0); } to { transform: perspective(520px) rotateX(64deg) translateY(44px); } }
+.hangar-floor { animation: none; will-change: transform; }
+
+/* the name keeps its travelling band of light; only the costly glow filter behind it is dropped */
+.hero h1 { filter: none; }
+
+/* reactor ring: the drawing is cached and turns as one layer; the racing light is its own rotating layer */
+.ring { filter: none; }
+.ring svg { will-change: transform; transition: transform 0.35s var(--ease); }
+.ring-g { transition: none; }
+.pulse { display: none; }
+.rx-glow { animation: none; }
+.rx-line { filter: none; }
+.ring::after {
+  content: ""; position: absolute; inset: 11%; border-radius: 50%; pointer-events: none; will-change: transform;
+  background: conic-gradient(from 0deg, transparent 0 74%, rgba(var(--gold-rgb), 0.3) 86%, #fff 96%, transparent 100%), conic-gradient(from 180deg, transparent 0 86%, var(--hot) 97%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle, transparent 62.5%, #000 64.5%, #000 68.5%, transparent 70.5%);
+  mask-image: radial-gradient(circle, transparent 62.5%, #000 64.5%, #000 68.5%, transparent 70.5%);
+}
+#pinion, .gearset { filter: none; }
+
+/* certificate scan beam: slides as a layer */
+.vault-scan { inset: 0 0 auto 0; height: 24%; mix-blend-mode: normal; opacity: 0.55; will-change: transform; animation: none; transform: translateY(-110%);
+  background: linear-gradient(transparent, rgba(var(--gold-rgb), 0.5) 48%, #fff 50%, rgba(var(--gold-rgb), 0.5) 52%, transparent); }
+@keyframes vslide { from { transform: translateY(-110%); } to { transform: translateY(430%); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .loadout.in .hex:not(.dim) { animation: hexfade 4s ease-in-out infinite; animation-delay: calc(var(--i) * 0.18s); }
+  .frame::before { animation: beam 5.5s linear infinite; }
+  li:nth-child(2n) .frame::before { animation-delay: 1.4s; }
+  .hangar-floor { animation: floorslide 2.2s linear infinite; }
+  .ring::after { animation: spin 5s linear infinite; }
+  .vault-scan { animation: vslide 4.2s linear infinite; }
+}
+/* sections that are off screen are skipped by the browser until the visitor gets near them */
+#arsenal, #proof, #log, #contact { content-visibility: auto; contain-intrinsic-size: auto 900px; }

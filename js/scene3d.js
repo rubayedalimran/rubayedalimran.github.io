@@ -26,7 +26,14 @@
   var P = PAL[document.documentElement.getAttribute("data-theme")] || PAL.crimson;
   P.ringMetal = 0.95; P.ambient = 0.8;
   var BG = P.bg, GOLD = P.line, ICE = P.ice, RED = P.red, CAM_Z = 9;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2));
+  /* Quality steps down by itself if the device cannot keep up:
+     3 = full: glow on at the screen's full sharpness (the starting point on capable devices)
+     2 = glow on, slightly lower resolution   1 = no glow   0 = light mode (half frame rate, no floor).
+     Nothing is reduced unless frames are measurably slow. */
+  var weak = small || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+  var quality = weak ? 2 : 3, DPR = window.devicePixelRatio || 1, frameNo = 0;
+  function ratio() { return quality === 3 ? Math.min(DPR, 2) : quality === 2 ? Math.min(DPR, 1.5) : quality === 1 ? Math.min(DPR, 1.25) : 1; }
+  renderer.setPixelRatio(ratio());
   var scene = new T.Scene();
   scene.background = new T.Color(BG);
   scene.fog = new T.FogExp2(BG, 0.045);
@@ -115,7 +122,7 @@
   scene.add(rig);
 
   /* ---------- the shaft: arcs of light on the far wall, vertical rails ---------- */
-  var arcs = [], SHAFT_Z = -6, SHAFT_R = 13;
+  var arcs = [], levels = [], SHAFT_Z = -6, SHAFT_R = 13;
   for (var y = 6; y > -70; y -= 3.4) {
     var level = new T.Group();
     level.position.set(0, y, SHAFT_Z);
@@ -132,7 +139,7 @@
       arc.userData.sp = 0.15 + Math.random() * 0.4;
       level.add(arc); arcs.push(arc);
     }
-    scene.add(level);
+    scene.add(level); levels.push(level);
   }
   var railPts = [];
   for (var r = 0; r < 9; r++) {
@@ -184,7 +191,7 @@
   scene.add(globe);
 
   /* ---------- a rolling wireframe floor that travels with the camera ---------- */
-  var floorGeo = new T.PlaneGeometry(76, 46, 60, 36);
+  var floorGeo = new T.PlaneGeometry(76, 46, 38, 22);
   floorGeo.rotateX(-Math.PI / 2);
   var floor = new T.Mesh(floorGeo, new T.MeshBasicMaterial({ color: GOLD, wireframe: true, transparent: true, opacity: 0.12 }));
   floor.position.z = -10;
@@ -238,12 +245,16 @@
   function bladed(r, hub, n, w, twist, mat) {
     var g = new T.Group(), geo = new T.BoxGeometry(0.035, r - hub, w), mid = (r + hub) / 2;
     g.add(along(new T.Mesh(new T.CylinderGeometry(hub, hub, 0.22, 24), gunmetal)));
+    /* all blades of a disc are drawn in one go (instancing) instead of one draw call each */
+    var blades = new T.InstancedMesh(geo, mat, n), dummy = new T.Object3D();
     for (var i = 0; i < n; i++) {
-      var a = (i / n) * Math.PI * 2, b = new T.Mesh(geo, mat);
-      b.position.set(0, Math.cos(a) * mid, Math.sin(a) * mid);
-      b.rotation.set(a, twist, 0);
-      g.add(b);
+      var a = (i / n) * Math.PI * 2;
+      dummy.position.set(0, Math.cos(a) * mid, Math.sin(a) * mid);
+      dummy.rotation.set(a, twist, 0);
+      dummy.updateMatrix();
+      blades.setMatrixAt(i, dummy.matrix);
     }
+    g.add(blades);
     var rim = new T.Mesh(new T.TorusGeometry(r, 0.012, 6, 80), glowMat(GOLD, 0.8));
     rim.rotation.y = Math.PI / 2; g.add(rim);
     return g;
@@ -340,8 +351,9 @@
   var W, H, visH, visW, base = { x: 0, y: 0, s: 1 };
   function fit() {
     W = innerWidth; H = innerHeight;
+    renderer.setPixelRatio(ratio());
     renderer.setSize(W, H, false);
-    if (composer) composer.setSize(W, H);
+    if (composer) { composer.setPixelRatio(ratio()); composer.setSize(W, H); }
     cam.aspect = W / H; cam.updateProjectionMatrix();
     visH = 2 * CAM_Z * Math.tan((22.5 * Math.PI) / 180); visW = visH * cam.aspect;
     var c = document.getElementById("core");
@@ -406,12 +418,22 @@
     orbit.rotation.z = t * 0.5; orbit2.rotation.z = -t * 0.3;
 
     /* floor: rolling waves under the camera */
+    floor.visible = quality > 0;
     floor.position.y = camY - 4.8;
-    for (var i = 0; i < fpos.count; i++) {
-      var fx = fpos.getX(i), fz = fpos.getZ(i);
-      fpos.setY(i, Math.sin(fx * 0.32 + t * 0.7) * 0.42 + Math.cos(fz * 0.4 + t * 0.5 + scr * 0.004) * 0.36);
+    if (floor.visible && (frameNo & 1) === 0) {          /* waves are recalculated every other frame */
+      for (var i = 0; i < fpos.count; i++) {
+        var fx = fpos.getX(i), fz = fpos.getZ(i);
+        fpos.setY(i, Math.sin(fx * 0.32 + t * 0.7) * 0.42 + Math.cos(fz * 0.4 + t * 0.5 + scr * 0.004) * 0.36);
+      }
+      fpos.needsUpdate = true;
     }
-    fpos.needsUpdate = true;
+
+    /* only draw and animate what is near the camera */
+    for (var v = 0; v < stations.length; v++) stations[v].visible = Math.abs(stations[v].position.y - camY) < 10;
+    for (v = 0; v < floaters.length; v++) floaters[v].visible = Math.abs(floaters[v].position.y - camY) < 9;
+    for (v = 0; v < levels.length; v++) levels[v].visible = Math.abs(levels[v].position.y - camY) < 12;
+    rig.visible = scr < H * 2.4;
+    globe.visible = Math.abs(globe.position.y - camY) < 10;
 
     /* streaks: rise steadily, and stretch with scroll speed */
     var vel = Math.abs(scr - lastScr); lastScr = scr;
@@ -456,12 +478,26 @@
     gy[1].rotation.x = t * 0.9;
     gy[2].rotation.y = t * 1.3;
 
-    if (composer) composer.render(); else renderer.render(scene, cam);
+    if (composer && quality >= 2) composer.render(); else renderer.render(scene, cam);
   }
 
+  /* Watches how long frames take. If the device is struggling, quality drops one step and stays there. */
+  var lastMs = 0, slow = 0, counted = 0, settle = 40;
   function loop(ms) {
-    if (!document.hidden) draw(ms);
     requestAnimationFrame(loop);
+    if (document.hidden) { lastMs = 0; return; }
+    frameNo++;
+    if (quality === 0 && (frameNo & 1)) return;            /* light mode: half frame rate */
+    var dt = lastMs ? ms - lastMs : 16; lastMs = ms;
+    if (settle > 0) settle--;
+    else if (dt < 250) {
+      counted++; if (dt > (quality === 0 ? 70 : 24)) slow++;
+      if (counted >= 90) {
+        if (slow > 30 && quality > 0) { quality--; fit(); settle = 60; }
+        counted = 0; slow = 0;
+      }
+    }
+    draw(ms);
   }
 
   fit();

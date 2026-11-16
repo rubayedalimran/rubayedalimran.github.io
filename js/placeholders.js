@@ -114,14 +114,30 @@
   function ring(items, step) {
     /* drawn as an energy reactor: a band of coil blocks between two rings, with light racing round it */
     function pt(r, a) { return (r * Math.cos(a)).toFixed(1) + " " + (r * Math.sin(a)).toFixed(1); }
-    var s = '<svg viewBox="-520 -520 1040 1040"><g class="ring-g" fill="none" stroke="currentColor">';
-    s += '<circle r="442" opacity=".6"/><circle r="424" stroke-width="3"/><circle r="368" stroke-width="2"/><circle r="330" stroke-dasharray="3 9" opacity=".6"/><circle r="250" stroke-width="7" opacity=".22"/><circle r="236" opacity=".4"/>';
-    var N = 30, p = (2 * Math.PI) / N;
+    /* Built up like a real machine: an outer bolted housing, a ring of wound coil packs clamped
+       between two rails, a luminous band inside them, and an inner slotted hub. */
+    var s = '<svg viewBox="-520 -520 1040 1040"><defs>' +
+      '<radialGradient id="rx-lum" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="372"><stop offset=".86" style="stop-color:rgb(var(--ice-rgb))" stop-opacity="0"/><stop offset=".925" style="stop-color:rgb(var(--ice-rgb))" stop-opacity=".3"/><stop offset=".944" stop-color="#fff" stop-opacity=".9"/><stop offset=".975" style="stop-color:rgb(var(--ice-rgb))" stop-opacity="0"/></radialGradient>' +
+      '<filter id="rx-soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter></defs>' +
+      '<g class="ring-g" fill="none" stroke="currentColor">';
+    /* housing: thick rim, bolt circle, tick scale */
+    s += '<circle class="rx-rim" r="446" stroke-width="10"/><circle r="454" opacity=".7"/><circle r="438" opacity=".7"/>';
+    for (var bt = 0; bt < 40; bt++) s += '<circle class="rx-bolt" cx="' + (446 * Math.cos(bt * 0.15708)).toFixed(1) + '" cy="' + (446 * Math.sin(bt * 0.15708)).toFixed(1) + '" r="3.2"/>';
+    /* luminous band: a soft glow under a hard bright line */
+    s += '<circle class="rx-glow" r="350" stroke-width="16" filter="url(#rx-soft)"/><circle r="372" fill="url(#rx-lum)" stroke="none"/><circle class="rx-line" r="351" stroke-width="2.5"/>';
+    /* coil packs: a housing block, copper windings across it, and a clamp at each end */
+    var N = 20, p = (2 * Math.PI) / N;
     for (var c = 0; c < N; c++) {
-      var a0 = c * p + 0.03, a1 = (c + 1) * p - 0.03;
-      s += '<path class="coil" d="M' + pt(376, a0) + "A376 376 0 0 1 " + pt(376, a1) + "L" + pt(416, a1) + "A416 416 0 0 0 " + pt(416, a0) + 'Z"/>';
+      var a0 = c * p + 0.045, a1 = (c + 1) * p - 0.045;
+      s += '<path class="coil" d="M' + pt(372, a0) + "A372 372 0 0 1 " + pt(372, a1) + "L" + pt(428, a1) + "A428 428 0 0 0 " + pt(428, a0) + 'Z"/>';
+      for (var w = 1; w < 9; w++) { var wa = a0 + ((a1 - a0) * w) / 9; s += '<path class="wind" d="M' + pt(377, wa - 0.006) + "L" + pt(423, wa + 0.006) + '"/>'; }
+      s += '<path class="clamp" d="M' + pt(366, a0 - 0.012) + "L" + pt(434, a0 - 0.012) + "M" + pt(366, a1 + 0.012) + "L" + pt(434, a1 + 0.012) + '"/>';
     }
-    for (var k = 0; k < 24; k++) s += '<path opacity=".35" transform="rotate(' + k * 15 + ')" d="M250 0H330M442 0h10"/>';
+    s += '<circle r="432" stroke-width="2"/><circle r="368" stroke-width="2"/>';
+    /* inner hub: slotted ring, spokes, fine scale */
+    s += '<circle class="rx-hub" r="300" stroke-width="16" stroke-dasharray="34 13"/><circle r="312" opacity=".7"/><circle r="288" opacity=".7"/><circle r="250" stroke-width="6" opacity=".25"/><circle r="236" opacity=".45"/>';
+    for (var k = 0; k < 20; k++) s += '<path opacity=".4" stroke-width="2" transform="rotate(' + (k * 18 + 9) + ')" d="M236 0H288"/>';
+    for (var tk = 0; tk < 120; tk++) s += '<path opacity=".5" transform="rotate(' + tk * 3 + ')" d="M' + (tk % 5 ? 326 : 320) + ' 0H332"/>';
     s += '<circle class="pulse" r="396"/><circle class="pulse b" r="350"/>';
     items.forEach(function (p, i) {
       s += '<g class="node" data-i="' + i + '" transform="rotate(' + i * step + ')"><path d="M411 0H452" /><circle cx="466" cy="0" r="13"/><circle class="node-dot" cx="466" cy="0" r="5"/>' +

@@ -8,7 +8,7 @@
   "use strict";
   var c = document.getElementById("fx");
   if (!c) return;
-  var x = c.getContext("2d"), W, H, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var x = c.getContext("2d"), W, H, dpr = Math.min(window.devicePixelRatio || 1, 1.5), dirty = true;
   var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
   var embers = [], sparks = [], trail = [], blasts = [], running = true;
 
@@ -41,7 +41,8 @@
   }
   size();
   addEventListener("resize", size);
-  var count = document.documentElement.classList.contains("gl") ? 14 : Math.min(70, Math.round(innerWidth / 16));
+  /* with the 3D world running its dust does this job, so this layer stays idle until there is a click or cursor trail */
+  var count = document.documentElement.classList.contains("gl") ? 0 : Math.min(50, Math.round(innerWidth / 22));
   for (var i = 0; i < count; i++) embers.push(ember(true));
 
   function spark(px, py, speed, angle, life, w, heavy) {
@@ -62,6 +63,13 @@
   }
 
   function draw() {
+    /* nothing to show: clear once, then do no work at all until something happens */
+    if (!embers.length && !sparks.length && !trail.length && !blasts.length) {
+      if (dirty) { x.clearRect(0, 0, W, H); dirty = false; }
+      if (running && !calm) requestAnimationFrame(draw);
+      return;
+    }
+    dirty = true;
     x.globalCompositeOperation = "source-over";
     x.clearRect(0, 0, W, H);
     for (var i = 0; i < embers.length; i++) {

@@ -10,15 +10,64 @@
   function media(src, seed, title, tag, h) {
     var ph = Draw.placeholder(seed, title, tag, h);
     if (!src) return ph;
+    /* a PDF (a certificate): show the placeholder now, draw its first page in later, and link to the file */
+    if (/\.pdf$/i.test(src)) return '<a class="doc" href="' + esc(src) + '" target="_blank" rel="noopener" data-pdf="' + esc(src) + '" aria-label="Open ' + esc(title) + '">' + ph + "</a>";
+    /* a video: plays in place, silent until the visitor turns the sound on */
+    if (/\.(mp4|webm)$/i.test(src)) return '<video src="' + esc(src) + '#t=0.1" controls muted loop playsinline preload="metadata" aria-label="' + esc(title) + '"></video>';
     return '<img src="' + esc(src) + '" alt="' + esc(title) + '" loading="lazy" data-ph="' + esc(ph) + '">';
   }
   document.addEventListener("error", function (e) {
     var t = e.target;
     if (t.tagName === "IMG" && t.dataset.ph) t.outerHTML = t.dataset.ph;
   }, true);
+  /* small pictures are shown at their own size on white instead of being stretched */
+  document.addEventListener("load", function (e) {
+    var t = e.target;
+    if (t.tagName === "IMG" && t.naturalWidth && t.naturalWidth < 420) t.classList.add("small");
+  }, true);
+
+  /* click any project picture in a dossier to see it full size */
+  var zoom = $("zoom");
+  document.addEventListener("click", function (e) {
+    var im = e.target.closest ? e.target.closest(".dossier .frame img") : null;
+    if (im && zoom) { zoom.querySelector("img").src = im.src; zoom.querySelector("img").alt = im.alt; zoom.showModal(); }
+  });
+  if (zoom) zoom.addEventListener("click", function () { zoom.close(); });
+
+  /* draw the first page of each PDF into its frame (loads the PDF reader only if needed) */
+  function drawPdfs() {
+    var slots = [].slice.call(document.querySelectorAll("a.doc[data-pdf]"));
+    if (!slots.length) return;
+    function go() {
+      var lib = window.pdfjsLib;
+      if (!lib) return;
+      lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      slots.forEach(function (a) {
+        lib.getDocument(a.dataset.pdf).promise.then(function (d) { return d.getPage(1); }).then(function (pg) {
+          var v = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 1000 / v.width }), cv = document.createElement("canvas");
+          cv.width = vp.width; cv.height = vp.height;
+          return pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise.then(function () {
+            a.innerHTML = '<img src="' + cv.toDataURL("image/jpeg", 0.85) + '" alt="' + esc(a.getAttribute("aria-label").replace(/^Open /, "")) + '">';
+          });
+        }).catch(function () {});
+      });
+    }
+    var sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    sc.onload = go;
+    document.head.appendChild(sc);
+  }
 
   var sampleTag = function (x) { return x.sample ? '<span class="tag">Sample</span>' : ""; };
-  var TYPES = { all: "All", robotics: "Robotics", aircraft: "Aircraft", cad: "CAD", software: "Software", other: "Other" };
+
+  /* Only projects that have at least one real picture are shown, strongest (lowest rank) first. */
+  var pics = function (p) { return (p.gallery || []).filter(Boolean); };
+  D.projects = D.projects.filter(function (p) { return p.thumb || pics(p).length; })
+    .sort(function (a, b) { return (a.rank || 99) - (b.rank || 99); });
+  var chips = function (p) {
+    return p.shows && p.shows.length ? '<ul class="chips">' + p.shows.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ul>" : "";
+  };
+  var TYPES = { all: "All", robotics: "Robotics", mechanisms: "Mechanisms", machines: "Machines", parts: "Parts", software: "Software", other: "Other" };
   var stat = function (p, big) {
     return p.keyStat && p.keyStat.value ? '<p class="build-stat' + (big ? " big" : "") + '"><b>' + esc(p.keyStat.value) + "</b> " + esc(p.keyStat.label) + "</p>" : "";
   };
@@ -43,7 +92,9 @@
   document.title = o.name + " — " + o.title;
   $("gear").innerHTML = Draw.gearset();
   $("bar-gear").innerHTML = Draw.gear(10, 9, 2.6, 22);
-  $("photo").innerHTML = media(o.photo, "portrait", o.name, "AWAITING PORTRAIT", 500);
+  /* no portrait yet: leave the frame out rather than show an empty one */
+  if (o.photo) $("photo").innerHTML = media(o.photo, "portrait", o.name, "", 500);
+  else { $("photo").remove(); document.querySelector(".sheet").classList.add("no-photo"); }
   $("bio").innerHTML = o.bio.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") +
     (o.motto ? '<p class="motto">' + esc(o.motto) + "</p>" : "");
   $("facts").innerHTML = Object.keys(o.facts).map(function (k) {
@@ -82,7 +133,7 @@
   function renderBay() {
     var p = list[active];
     $("bay").innerHTML =
-      '<div class="frame bay-media">' + media(p.thumb, p.id, p.title) + "</div>" +
+      '<div class="frame bay-media">' + media(p.thumb || (p.gallery || [])[0], p.id, p.title) + "</div>" +
       '<div class="bay-text">' +
       '<p class="build-meta"><span>' + esc(p.mark) + "</span><span>" + esc(TYPES[p.type] || p.type) + "</span>" + sampleTag(p) + "</p>" +
       '<h3 class="codename">' + esc(p.codename || p.title) + "</h3>" +
@@ -99,9 +150,11 @@
 
   function buildHangar() {
     list = D.projects.filter(function (p) { return filter === "all" || p.type === filter; });
-    hangar.style.height = "calc(100svh + " + (list.length - 1) * 70 + "vh)";
+    /* with many projects, pack the nodes closer round the ring and need less scrolling per project */
+    STEP = Math.min(22, 336 / Math.max(1, list.length));
+    hangar.style.height = "calc(100svh + " + Math.round((list.length - 1) * clamp(700 / list.length, 30, 70)) + "vh)";
     $("ring").innerHTML = Draw.ring(list, STEP);
-    ringG = document.querySelector("#ring .ring-g");
+    ringG = document.querySelector("#ring svg");   /* the whole drawing turns as one layer, which is cheap */
     $("hangar-lede").textContent = list.length + (list.length === 1 ? " build" : " builds") + " on the ring. Scroll to turn it.";
     $("filters").innerHTML = Object.keys(TYPES).map(function (t) {
       var n = t === "all" ? D.projects.length : D.projects.filter(function (p) { return p.type === t; }).length;
@@ -144,8 +197,9 @@
     var story = Object.keys(STORY).filter(function (k) { return p.story[k]; }).map(function (k) {
       return "<div><h4>" + STORY[k] + "</h4><p>" + esc(p.story[k]) + "</p></div>";
     }).join("");
-    var gallery = (p.gallery || []).map(function (g, i) {
-      return '<figure class="frame">' + media(g, p.id + i, p.title + " " + (i + 1)) + "</figure>";
+    /* the first picture is shown large at the top, so the gallery holds the rest */
+    var gallery = pics(p).slice(p.thumb ? 0 : 1).map(function (g, i) {
+      return '<figure class="frame">' + media(g, p.id + i, p.title + " " + (i + 2)) + "</figure>";
     }).join("");
     var links = Object.keys(p.links || {}).map(function (k) {
       return '<a class="btn" href="' + esc(p.links[k]) + '" target="_blank" rel="noopener">' + esc(k) + "</a>";
@@ -156,12 +210,12 @@
       '<button class="btn" type="button" id="dossier-close">Close</button></header>' +
       '<div class="dossier-top"><div><h2 id="dossier-title">' + esc(p.codename || p.title) + "</h2>" +
       (p.codename ? '<p class="bay-title">' + esc(p.title) + "</p>" : "") +
-      '<p class="lede">' + esc(p.summary) + "</p>" +
+      '<p class="lede">' + esc(p.summary) + "</p>" + chips(p) +
       stat(p, true) + "</div>" +
-      '<figure class="frame">' + media(p.thumb, p.id, p.title) + "</figure></div>" +
+      '<figure class="frame">' + media(p.thumb || (p.gallery || [])[0], p.id, p.title) + "</figure></div>" +
       '<dl class="titleblock">' + specs + "</dl>" +
       '<div class="story">' + story + "</div>" +
-      (gallery ? '<h3>Gallery</h3><div class="gallery">' + gallery + "</div>" : "") +
+      (gallery ? '<h3>More views</h3><div class="gallery">' + gallery + "</div>" : "") +
       (links ? '<div class="actions">' + links + "</div>" : "");
     if (!dlg.open) dlg.showModal();
     dlg.scrollTop = 0;
@@ -224,17 +278,38 @@
   showCap(0);
 
   /* ---------- hall of proof ---------- */
-  $("wall").innerHTML = D.achievements.map(function (a, i) {
-    return '<li data-rv><figure><div class="frame">' +
-      media(a.type === "video" ? "" : a.media, "ach" + i + a.title, a.title, a.type === "video" ? "AWAITING VIDEO" : "AWAITING MEDIA", 300) +
-      "</div><figcaption><b>" + esc(a.title) + "</b><span>" + esc([a.issuer, a.date].filter(Boolean).join(" · ")) + "</span>" + sampleTag(a) + "</figcaption></figure></li>";
+  /* A credential vault: a list of credentials on one side, and a screen that scans in the selected
+     certificate on the other. It steps through them on its own until the visitor takes over. */
+  var ACH = D.achievements.filter(function (x) { return x.media; }), achOn = -1, achAuto = null;
+  $("vault-list").innerHTML = ACH.map(function (x, i) {
+    return '<li><button type="button" data-i="' + i + '"><i>' + pad2(i + 1) + "</i><span>" + esc(x.title) + "</span><small>" + esc(x.date || "") + "</small></button></li>";
   }).join("");
-  var proof = $("proof");
-  proof.addEventListener("pointermove", function (e) {
-    var r = proof.getBoundingClientRect();
-    proof.style.setProperty("--mx", e.clientX - r.left + "px");
-    proof.style.setProperty("--my", e.clientY - r.top + "px");
-  });
+  $("vault-stack").innerHTML = ACH.map(function (x, i) {
+    return '<div class="vault-item" data-i="' + i + '">' + media(x.media, "ach" + i, x.title, "LOADING", 283) + "</div>";
+  }).join("");
+  function showAch(i) {
+    if (i === achOn || !ACH[i]) return;
+    achOn = i; var x = ACH[i];
+    [].forEach.call($("vault-stack").children, function (el) { el.classList.toggle("on", +el.dataset.i === i); });
+    [].forEach.call($("vault-list").querySelectorAll("button"), function (bt) { bt.setAttribute("aria-current", +bt.dataset.i === i); });
+    $("vault-cap").innerHTML = '<p class="rd-cat">' + esc(x.issuer || "") + '</p><p class="vault-title">' + esc(x.title) + '</p><p class="vault-meta">' +
+      [x.date ? "Issued " + esc(x.date) : "", x.id ? "Credential " + esc(x.id) : ""].filter(Boolean).join("<span></span>") +
+      '</p><a class="btn" href="' + esc(x.media) + '" target="_blank" rel="noopener">Open certificate</a>';
+    scramble($("vault-cap").querySelector(".vault-title"));
+  }
+  function takeOver(e) {
+    if (achAuto) { clearInterval(achAuto); achAuto = null; }
+    var bt = e && e.target.closest ? e.target.closest("button[data-i]") : null;
+    if (bt) showAch(+bt.dataset.i);
+  }
+  ["pointerover", "focusin", "click"].forEach(function (ev) { $("vault-list").addEventListener(ev, takeOver); });
+  $("vault").addEventListener("pointerdown", takeOver);
+  showAch(0);
+  if (!calm && ACH.length > 1) achAuto = setInterval(function () {
+    var r = $("vault").getBoundingClientRect();
+    if (r.top < innerHeight && r.bottom > 0) showAch((achOn + 1) % ACH.length);
+  }, 4200);
+  var pdfsDrawn = false;   /* certificates are fetched and drawn only when the visitor gets near them */
 
   /* ---------- flight log: a pinion rolls down a rack as you scroll ---------- */
   $("timeline").innerHTML = D.timeline.map(function (t) {
@@ -289,6 +364,7 @@
   var bar = $("progress"), barGear = $("bar-gear"), core = $("core"), ticking = false;
   function onScroll() {
     ticking = false;
+    if (!pdfsDrawn && $("vault").getBoundingClientRect().top < innerHeight * 1.8) { pdfsDrawn = true; drawPdfs(); }
     var max = document.documentElement.scrollHeight - innerHeight;
     bar.style.transform = "scaleX(" + (max > 0 ? scrollY / max : 0) + ")";
     mark.style.top = (max > 0 ? scrollY / max : 0) * 100 + "%";
