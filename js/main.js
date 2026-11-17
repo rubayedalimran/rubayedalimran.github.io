@@ -127,6 +127,7 @@
   function hangarTop() { return hangar.getBoundingClientRect().top + scrollY; }
   function goTo(i) {
     i = clamp(i, 0, list.length - 1);
+    if (hangar.classList.contains("deck")) { $("bay").scrollTo({ left: i * deckStep(), behavior: calm ? "auto" : "smooth" }); return; }
     scrollTo({ top: hangarTop() + (list.length > 1 ? i / (list.length - 1) : 0) * span(), behavior: calm ? "auto" : "smooth" });
   }
 
@@ -161,16 +162,51 @@
       return n ? '<button type="button" data-type="' + t + '" aria-pressed="' + (t === filter) + '">' + TYPES[t] + " <span>" + n + "</span></button>" : "";
     }).join("");
     active = -1;
-    turnRing();
+    if (phone.matches) { hangar.classList.add("deck"); hangar.style.height = ""; buildDeck(); }
+    else { hangar.classList.remove("deck"); turnRing(); }
   }
 
+  /* ---------- phones: projects become a deck of cards you swipe sideways ---------- */
+  function deckStep() { var c = $("bay").firstElementChild; return c ? c.offsetWidth + 14 : 1; }
+  function buildDeck() {
+    $("bay").innerHTML = list.map(function (p, i) {
+      return '<article class="card" data-i="' + i + '"><div class="card-media">' + media(p.thumb || (p.gallery || [])[0], p.id, p.title) +
+        '<span class="card-mark">' + esc(p.mark) + '</span></div><div class="card-body">' +
+        '<p class="build-meta"><span>' + esc(TYPES[p.type] || p.type) + "</span></p>" +
+        '<h3 class="codename">' + esc(p.codename || p.title) + "</h3>" +
+        (p.codename ? '<p class="bay-title">' + esc(p.title) + "</p>" : "") +
+        '<p class="bay-sum">' + esc(p.summary) + "</p>" + stat(p) +
+        '<a class="btn btn-go" href="#/project/' + esc(p.id) + '">Open dossier</a></div></article>';
+    }).join("");
+    $("bay").scrollLeft = 0;
+    active = -1; deckMove();
+  }
+  function deckMove() {
+    if (!hangar.classList.contains("deck")) return;
+    var pos = $("bay").scrollLeft / deckStep(), i = clamp(Math.round(pos), 0, list.length - 1);
+    if (ringG) ringG.style.transform = "rotate(" + (-pos * STEP).toFixed(2) + "deg)";
+    if (i === active) return;
+    active = i;
+    [].forEach.call($("bay").children, function (c) { c.classList.toggle("on", +c.dataset.i === i); });
+    $("count").textContent = (i + 1) + " / " + list.length;
+    $("prev").disabled = i === 0; $("next").disabled = i === list.length - 1;
+    document.querySelectorAll("#ring .node").forEach(function (n) { n.classList.toggle("on", +n.dataset.i === i); });
+    if (navigator.vibrate && deckTouched) navigator.vibrate(6);
+  }
+  var deckTouched = false;
+  $("bay").addEventListener("scroll", deckMove, { passive: true });
+  $("bay").addEventListener("touchstart", function () { deckTouched = true; }, { passive: true, once: true });
+
   function turnRing() {
+    if (hangar.classList.contains("deck")) return;
     var s = span(), p = s > 0 ? clamp(-hangar.getBoundingClientRect().top / s, 0, 1) : 0;
     var pos = p * (list.length - 1), i = Math.round(pos);
     if (ringG) ringG.style.transform = "rotate(" + (-pos * STEP).toFixed(2) + "deg)";
     if (i !== active) { active = i; renderBay(); }
   }
 
+  var phone = matchMedia("(max-width: 47.99rem)");
+  (phone.addEventListener ? phone.addEventListener.bind(phone, "change") : phone.addListener.bind(phone))(function () { buildHangar(); });
   $("filters").addEventListener("click", function (e) {
     var b = e.target.closest("button");
     if (!b) return;
@@ -361,15 +397,27 @@
   addEventListener("load", ticks);
 
   /* ---------- everything that follows the scroll position ---------- */
-  var bar = $("progress"), barGear = $("bar-gear"), core = $("core"), ticking = false;
+  var bar = $("progress"), barGear = $("bar-gear"), core = $("core"), ticking = false, dockOn = "";
+  [].forEach.call(document.querySelectorAll(".dock a"), function (a) {
+    a.addEventListener("click", function () { if (navigator.vibrate) navigator.vibrate(8); });
+  });
+  $("mail-btn").href = "mailto:" + o.email;
+  $("cv-btn").href = o.resume;
   function onScroll() {
     ticking = false;
     if (!pdfsDrawn && $("vault").getBoundingClientRect().top < innerHeight * 1.8) { pdfsDrawn = true; drawPdfs(); }
     var max = document.documentElement.scrollHeight - innerHeight;
     bar.style.transform = "scaleX(" + (max > 0 ? scrollY / max : 0) + ")";
     mark.style.top = (max > 0 ? scrollY / max : 0) * 100 + "%";
-    var sector = SECT[0][1];
-    SECT.forEach(function (s) { if ($(s[0]).getBoundingClientRect().top < innerHeight * 0.5) sector = s[1]; });
+    var sector = SECT[0][1], secId = SECT[0][0];
+    SECT.forEach(function (s) { if ($(s[0]).getBoundingClientRect().top < innerHeight * 0.5) { sector = s[1]; secId = s[0]; } });
+    if (secId !== dockOn) {
+      dockOn = secId;
+      [].forEach.call(document.querySelectorAll(".dock a"), function (a) {
+        var hit = a.dataset.s === secId || (a.dataset.s === "proof" && secId === "log");
+        if (hit) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+      });
+    }
     $("hud-sector").textContent = "Sector " + sector;
     $("hud-depth").textContent = "Depth " + ("000" + Math.round(scrollY / 30)).slice(-4) + " m";
     ghosts.forEach(function (g) {

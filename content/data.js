@@ -23,7 +23,7 @@ window.PORTFOLIO = {
       "I design in CAD, build with my own hands, then wire and code what I've built, because an idea only proves itself once it moves. I'm working toward a career in robotics and automation: machines that take on the hard, repetitive and dangerous work so people don't have to."
     ],
     motto: "There are no strings on me.",
-    photo: "",
+    photo: "assets/profile.jpg",
     facts: {
       University: "Khulna University of Engineering & Technology",
       Degree: "B.Sc. Mechanical Engineering",

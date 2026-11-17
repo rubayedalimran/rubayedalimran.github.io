@@ -147,6 +147,8 @@
       <div class="contact-row" data-rv>
         <a class="contact-mail" id="mail" href="#"></a>
         <button class="btn" id="copy" type="button">Copy address</button>
+        <a class="btn btn-go only-phone" id="mail-btn" href="#">Email me</a>
+        <a class="btn only-phone" id="cv-btn" href="#" download>Download résumé</a>
       </div>
       <ul class="links" id="links"></ul>
     </section>
@@ -155,6 +157,15 @@
   <footer class="foot">
     <span id="foot-name"></span>
   </footer>
+
+  <!-- Phones only: an app-style dock at the bottom of the screen -->
+  <nav class="dock" aria-label="Sections">
+    <a href="#about" data-s="about"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6 7-6s7 2.1 7 6"/></svg><span>Origin</span></a>
+    <a href="#builds" data-s="builds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span>Hangar</span></a>
+    <a href="#arsenal" data-s="arsenal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="2.6"/></svg><span>Arsenal</span></a>
+    <a href="#proof" data-s="proof"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.6 13.4L7 21l5-2.6 5 2.6-1.6-7.6"/></svg><span>Proof</span></a>
+    <a href="#contact" data-s="contact"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1.8"/><path d="M8 16a5.6 5.6 0 010-8M16 8a5.6 5.6 0 010 8M5.2 18.8a9.6 9.6 0 010-13.6M18.8 5.2a9.6 9.6 0 010 13.6"/></svg><span>Contact</span></a>
+  </nav>
 
   <dialog class="dossier" id="dossier" aria-labelledby="dossier-title">
     <div class="dossier-in" id="dossier-in"></div>

@@ -368,6 +368,7 @@
     var tight = cam.aspect < 1.5;
     globe.position.set(visW * (tight ? 0.34 : 0.24), (-maxScroll / H) * 3 - (tight ? 1.6 : 0.2), -3);
     globe.scale.setScalar(tight ? 0.5 : 1);
+    if (cam.aspect < 0.8) { globe.position.set(visW * 0.3, (-maxScroll / H) * 3 + 3.9, -6); globe.scale.setScalar(0.42); }   /* phones: up behind the heading, clear of the buttons */
     /* park each station behind the middle of its section */
     stations.forEach(function (o) {
       var el = document.getElementById(o.userData.id);
@@ -381,7 +382,20 @@
   }
 
   var mx = 0, my = 0, sx = 0, sy = 0, lastScr = window.scrollY, boost = 0;
-  addEventListener("pointermove", function (e) { mx = (e.clientX / innerWidth) * 2 - 1; my = (e.clientY / innerHeight) * 2 - 1; });
+  addEventListener("pointermove", function (e) { if (e.pointerType === "mouse") { mx = (e.clientX / innerWidth) * 2 - 1; my = (e.clientY / innerHeight) * 2 - 1; } });
+  /* phones: tilting the phone moves the 3D world, the way the mouse does on a laptop */
+  if (!calm && "DeviceOrientationEvent" in window) {
+    var tiltOn = function () {
+      addEventListener("deviceorientation", function (e) {
+        if (e.gamma === null || e.beta === null) return;
+        mx = clamp(e.gamma / 28, -1, 1); my = clamp((e.beta - 50) / 30, -1, 1);
+      });
+    };
+    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+      /* iPhones ask the visitor first, and only after a touch */
+      addEventListener("touchend", function () { DeviceOrientationEvent.requestPermission().then(function (r) { if (r === "granted") tiltOn(); }).catch(function () {}); }, { once: true });
+    } else tiltOn();
+  }
 
   function draw(ms) {
     var t = ms * 0.001, scr = window.scrollY, ex = calm ? 0 : clamp(scr / (H * 0.75), 0, 1);
