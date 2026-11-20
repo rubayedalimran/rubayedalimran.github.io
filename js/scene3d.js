@@ -21,8 +21,10 @@
   var light = false;
   var PAL = {
     crimson: { bg: 0x060507, line: 0xe6bf7a, ice: 0xd6ecff, red: 0xd4202c, sun: 0x9c0f1a, planet: 0xd1a654, ring: 0x1c1719, planetEdge: 0xfff0cc, studio: 0x0b0809, fill: 0xff3040 },
-    reactor: { bg: 0x030810, line: 0x5fe0ff, ice: 0xffffff, red: 0x1e9bff, sun: 0x9fb4c8, planet: 0xe08a45, ring: 0x0c1622, planetEdge: 0xd9f6ff, studio: 0x060c14, fill: 0x18a0ff }
+    reactor: { bg: 0x030810, line: 0x5fe0ff, ice: 0xffffff, red: 0x1e9bff, sun: 0x9fb4c8, planet: 0xe08a45, ring: 0x0c1622, planetEdge: 0xd9f6ff, studio: 0x060c14, fill: 0x18a0ff },
+    sentinel: { bg: 0x040405, line: 0xc8d2dc, ice: 0xff1a24, red: 0xd0001a, sun: 0x66707a, planet: 0x9aa4ae, ring: 0x16181c, planetEdge: 0xffffff, studio: 0x070708, fill: 0xc8001a }   /* blood red: saturated, no pink */
   };
+  var sent = document.documentElement.getAttribute("data-theme") === "sentinel";
   var P = PAL[document.documentElement.getAttribute("data-theme")] || PAL.crimson;
   P.ringMetal = 0.95; P.ambient = 0.8;
   var BG = P.bg, GOLD = P.line, ICE = P.ice, RED = P.red, CAM_Z = 9;
@@ -40,14 +42,14 @@
   var cam = new T.PerspectiveCamera(45, 1, 0.1, 140);
   scene.add(cam);
   cam.add(new T.AmbientLight(light ? 0xffffff : 0x4a3a3a, P.ambient));
-  var key = new T.PointLight(0xfff0d8, 1.3, 50); key.position.set(5, 6, 3); cam.add(key);
+  var key = new T.PointLight(0xfff0d8, 0.85, 50); key.position.set(5, 6, 3); cam.add(key);
   var fill = new T.PointLight(P.fill, 0.9, 40); fill.position.set(-7, -3, 1); cam.add(fill);
 
   /* a small studio of light panels, so the metal has something to reflect */
   try {
     var pm = new T.PMREMGenerator(renderer), studio = new T.Scene();
     studio.add(new T.Mesh(new T.SphereGeometry(30, 16, 8), new T.MeshBasicMaterial({ color: P.studio, side: T.BackSide })));
-    [[0xffffff, 0, 14, 5, 16, 6], [0xffdca8, -13, 3, 7, 6, 12], [P.fill, 13, -2, 5, 5, 10], [0xd6ecff, 0, -11, 9, 12, 3], [0xfff2d6, 6, 4, -14, 8, 8]]
+    [[0xb8b8b8, 0, 14, 5, 16, 6], [0x9c8a6c, -13, 3, 7, 6, 12], [P.fill, 13, -2, 5, 5, 10], [0xd6ecff, 0, -11, 9, 12, 3], [0xfff2d6, 6, 4, -14, 8, 8]]
       .forEach(function (p) {
         var m = new T.Mesh(new T.PlaneGeometry(p[4], p[5]), new T.MeshBasicMaterial({ color: p[0], side: T.DoubleSide }));
         m.position.set(p[1], p[2], p[3]); m.lookAt(0, 0, 0); studio.add(m);
@@ -68,9 +70,9 @@
   }
   function circle(x, y, r) { var c = new T.Path(); c.absarc(x, y, r, 0, Math.PI * 2, true); return c; }
 
-  var crimson = new T.MeshStandardMaterial({ color: P.sun, metalness: light ? 0.15 : 0.8, roughness: 0.24, envMapIntensity: 1.5 });
-  var gold = new T.MeshStandardMaterial({ color: P.planet, metalness: light ? 0.55 : 1, roughness: 0.22, envMapIntensity: 1.5 });
-  var gunmetal = new T.MeshStandardMaterial({ color: P.ring, metalness: P.ringMetal, roughness: 0.34, envMapIntensity: 1.2 });
+  var crimson = new T.MeshStandardMaterial({ color: P.sun, metalness: light ? 0.15 : 0.8, roughness: 0.42, envMapIntensity: 1.05 });
+  var gold = new T.MeshStandardMaterial({ color: P.planet, metalness: light ? 0.55 : 1, roughness: 0.42, envMapIntensity: 1.05 });
+  var gunmetal = new T.MeshStandardMaterial({ color: P.ring, metalness: P.ringMetal, roughness: 0.42, envMapIntensity: 1.05 });
   function edge(color, opacity) { return new T.LineBasicMaterial({ color: color, transparent: true, opacity: opacity }); }
 
   function gear(teeth, r, m, depth, body, edgeMat, internal) {
@@ -152,11 +154,25 @@
 
   /* ---------- floating gears ---------- */
   var floaters = [];
-  for (var f = 0; f < (small ? 8 : 16); f++) {
+  /* steel-and-red version: small geometric shards drift at the sides (torus knots, stellated octahedra,
+     icosahedra), each with a faint red core */
+  function shard(size) {
+    var g = new T.Group(), kind = Math.floor(Math.random() * 3);
+    if (kind === 0) g.add(new T.LineSegments(new T.EdgesGeometry(new T.TorusKnotGeometry(0.5, 0.13, 72, 6, 2, 3), 30), edge(GOLD, 0.75)));
+    if (kind === 1) {
+      g.add(new T.LineSegments(new T.EdgesGeometry(new T.TetrahedronGeometry(0.8)), edge(RED, 0.95)));
+      var t2 = new T.LineSegments(new T.EdgesGeometry(new T.TetrahedronGeometry(0.8)), edge(GOLD, 0.85)); t2.rotation.set(Math.PI / 2, 0, Math.PI / 4); g.add(t2);
+    }
+    if (kind === 2) g.add(new T.LineSegments(new T.EdgesGeometry(new T.IcosahedronGeometry(0.7, 0)), edge(GOLD, 0.85)));
+    g.add(new T.Mesh(new T.SphereGeometry(0.09, 10, 8), new T.MeshBasicMaterial({ color: RED })));
+    g.scale.setScalar(size);
+    return g;
+  }
+  for (var f = 0; f < (sent ? (small ? 5 : 10) : (small ? 3 : 6)); f++) {
     var teeth = 8 + Math.floor(Math.random() * 10), rad = 0.3 + Math.random() * 0.7, kind = Math.random();
-    var g = gear(teeth, rad, (rad / teeth) * 2, 0.12 + Math.random() * 0.12, kind < 0.3 ? crimson : (kind < 0.6 ? gold : gunmetal), edge(GOLD, 0.4));
-    g.position.set((Math.random() - 0.5) * 22, 1 - Math.random() * 56, -3 - Math.random() * 9);
-    g.rotation.set(Math.random() * 3, Math.random() * 3, 0);
+    var g = sent ? shard(0.55 + Math.random() * 0.45) : gear(teeth, rad, (rad / teeth) * 2, 0.12 + Math.random() * 0.12, kind < 0.3 ? crimson : (kind < 0.6 ? gold : gunmetal), edge(GOLD, 0.4));
+    g.position.set((Math.random() < 0.5 ? -1 : 1) * (5 + Math.random() * 7), sent ? -6 - Math.random() * 50 : 1 - Math.random() * 56, -3 - Math.random() * 9);   /* steel version: none beside the hero core */
+    if (sent) g.rotation.set(0, (Math.random() - 0.5) * 0.8, 0); else g.rotation.set(Math.random() * 3, Math.random() * 3, 0);
     g.userData.sp = (Math.random() - 0.5) * 0.6;
     scene.add(g); floaters.push(g);
   }
@@ -167,7 +183,7 @@
   grad.addColorStop(0, "#fff"); grad.addColorStop(0.35, "rgba(255,255,255,.5)"); grad.addColorStop(1, "rgba(255,255,255,0)");
   dx.fillStyle = grad; dx.fillRect(0, 0, 32, 32);
   var sprite = new T.CanvasTexture(dot);
-  var N = small ? 1300 : 3200, pos = [], col = [], cg = new T.Color(GOLD), cr = new T.Color(RED), ci = new T.Color(ICE), tmp = new T.Color();
+  var N = small ? 600 : 1400, pos = [], col = [], cg = new T.Color(GOLD), cr = new T.Color(RED), ci = new T.Color(ICE), tmp = new T.Color();
   for (var i = 0; i < N; i++) {
     pos.push((Math.random() - 0.5) * 34, 10 - Math.random() * 80, 4 - Math.random() * 26);
     var c = Math.random();
@@ -199,7 +215,7 @@
   var fpos = floorGeo.attributes.position;
 
   /* ---------- streaks of light that rise past the camera and stretch when you scroll ---------- */
-  var SN = small ? 50 : 120, sArr = new Float32Array(SN * 6), sData = [];
+  var SN = 0, sArr   /* streaks retired: reviewers found the background too busy */ = new Float32Array(SN * 6), sData = [];
   for (var s = 0; s < SN; s++) sData.push({ x: (Math.random() - 0.5) * 32, z: -1 - Math.random() * 20, y: (Math.random() - 0.5) * 26, v: 0.5 + Math.random() * 1.5, len: 0.25 + Math.random() * 0.8 });
   var sGeo = new T.BufferGeometry();
   sGeo.setAttribute("position", new T.BufferAttribute(sArr, 3));
@@ -336,6 +352,143 @@
   gy[2].add(new T.Mesh(new T.SphereGeometry(0.3, 20, 14), glowMat(ICE, 1)));
   station("log", 0.4, -5, gyro);
 
+  /* ---------- steel-and-red version (?theme=sentinel): an original sentinel robot head in the hero,
+     a 6D hypercube, a 4D tesseract and 24-cell, and a Lorenz attractor in the background.
+     All shapes are original designs, not copies of any film character or prop. ---------- */
+  var cubeGeo = null, cubeArr = null, V4 = [], E4 = [];
+  if (sent) {
+    stations = stations.filter(function (o) { scene.remove(o); return false; });
+    var redGlow = glowMat(RED, 1), ghost = new T.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0.07, depthWrite: false });
+    var part = function (list, parent, mesh, pos, dir, edgeOpacity) {
+      mesh.position.set(pos[0], pos[1], pos[2]);
+      mesh.userData.p0 = mesh.position.clone(); mesh.userData.dir = new T.Vector3(dir[0], dir[1], dir[2]);
+      if (edgeOpacity) mesh.add(rims(mesh.geometry, edgeOpacity));
+      parent.add(mesh); list.push(mesh); return mesh;
+    };
+
+
+
+    /* higher-dimensional solids, turned through their extra dimensions and projected down to 3D.
+       Edges in steel, corners as red points. */
+    var makeND = function (verts, edges, planes, dist, scale, opacity) {
+      var g = new T.Group(), arr = new Float32Array(edges.length * 6), geo = new T.BufferGeometry();
+      geo.setAttribute("position", new T.BufferAttribute(arr, 3));
+      var lines = new T.LineSegments(geo, edge(GOLD, opacity)); lines.frustumCulled = false; g.add(lines);
+      var parr = new Float32Array(verts.length * 3), pgeo = new T.BufferGeometry();
+      pgeo.setAttribute("position", new T.BufferAttribute(parr, 3));
+      var dots = new T.Points(pgeo, new T.PointsMaterial({ size: 0.17, map: sprite, color: RED, transparent: true, depthWrite: false, blending: T.AdditiveBlending }));
+      dots.frustumCulled = false; g.add(dots);
+      g.userData.nd = { verts: verts, edges: edges, planes: planes, dist: dist, scale: scale, arr: arr, parr: parr, geo: geo, pgeo: pgeo, v: new Float32Array(verts[0].length) };
+      return g;
+    };
+    var ndSolids = [];
+    var ndStep = function (g, t) {
+      var d = g.userData.nd, n = d.verts[0].length, v = d.v, i, c, e;
+      for (i = 0; i < d.verts.length; i++) {
+        for (c = 0; c < n; c++) v[c] = d.verts[i][c];
+        for (var p = 0; p < d.planes.length; p++) {
+          var pl = d.planes[p], an = t * pl[2], ca = Math.cos(an), sa = Math.sin(an), x0 = v[pl[0]], y0 = v[pl[1]];
+          v[pl[0]] = x0 * ca - y0 * sa; v[pl[1]] = x0 * sa + y0 * ca;
+        }
+        for (var dim = n; dim > 3; dim--) { var k = 1 / (1 - d.dist * v[dim - 1]); for (c = 0; c < dim - 1; c++) v[c] *= k; }   /* gentle perspective: d.dist is small, so k never blows up */
+        d.parr[i * 3] = v[0] * d.scale; d.parr[i * 3 + 1] = v[1] * d.scale; d.parr[i * 3 + 2] = v[2] * d.scale;
+      }
+      for (e = 0; e < d.edges.length; e++) {
+        var a3 = d.edges[e][0] * 3, b3 = d.edges[e][1] * 3, o6 = e * 6;
+        d.arr[o6] = d.parr[a3]; d.arr[o6 + 1] = d.parr[a3 + 1]; d.arr[o6 + 2] = d.parr[a3 + 2];
+        d.arr[o6 + 3] = d.parr[b3]; d.arr[o6 + 4] = d.parr[b3 + 1]; d.arr[o6 + 5] = d.parr[b3 + 2];
+      }
+      d.geo.attributes.position.needsUpdate = true; d.pgeo.attributes.position.needsUpdate = true;
+    };
+    var cubeND = function (n) {
+      var vs = [], es = [];
+      for (var i = 0; i < (1 << n); i++) { var v = []; for (var b = 0; b < n; b++) v.push(i & (1 << b) ? 1 : -1); vs.push(v); }
+      for (var a = 0; a < vs.length; a++) for (var b2 = a + 1; b2 < vs.length; b2++) { var x = a ^ b2; if (!(x & (x - 1))) es.push([a, b2]); }
+      return [vs, es];
+    };
+    /* six-dimensional hypercube: 64 corners, 192 edges, turning in four planes at once */
+    var hex6 = cubeND(6), hexeract = makeND(hex6[0], hex6[1], [[0, 3, 0.31], [1, 4, 0.23], [2, 5, 0.19], [0, 5, 0.13], [3, 4, 0.17]], 0.1, 0.9, 0.5);
+    ndSolids.push(hexeract);
+    station("arsenal", 0.36, -6, hexeract);
+    /* 24-cell: a four-dimensional solid with 24 corners and 96 edges, with no three-dimensional equivalent */
+    var c24v = [], c24e = [];
+    for (var ia = 0; ia < 4; ia++) for (var ib = ia + 1; ib < 4; ib++) [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (sg) { var v = [0, 0, 0, 0]; v[ia] = sg[0]; v[ib] = sg[1]; c24v.push(v); });
+    for (var ea = 0; ea < 24; ea++) for (var eb = ea + 1; eb < 24; eb++) { var dd = 0; for (var q4 = 0; q4 < 4; q4++) dd += Math.pow(c24v[ea][q4] - c24v[eb][q4], 2); if (Math.abs(dd - 2) < 1e-6) c24e.push([ea, eb]); }
+    var cell24 = makeND(c24v, c24e, [[0, 3, 0.27], [1, 2, 0.21], [2, 3, 0.16]], 0.2, 1.3, 0.7);
+    ndSolids.push(cell24);
+    station("about", 0.34, -5, cell24, 0.06);   /* beside the About heading */
+    cell24.userData.range = 1.9;   /* shows only once the visitor reaches About, never beside the hero core */
+
+    /* hypercube: a four-dimensional cube turning through the fourth dimension, projected into 3D */
+    for (var vI = 0; vI < 16; vI++) V4.push([vI & 1 ? 1 : -1, vI & 2 ? 1 : -1, vI & 4 ? 1 : -1, vI & 8 ? 1 : -1]);
+    for (var a1 = 0; a1 < 16; a1++) for (var b1 = a1 + 1; b1 < 16; b1++) { var d4 = a1 ^ b1; if (d4 && !(d4 & (d4 - 1))) E4.push([a1, b1]); }
+    cubeArr = new Float32Array(E4.length * 6);
+    cubeGeo = new T.BufferGeometry();
+    cubeGeo.setAttribute("position", new T.BufferAttribute(cubeArr, 3));
+    var cube = new T.Group();
+    var cubeLines = new T.LineSegments(cubeGeo, edge(GOLD, 0.9));
+    cubeLines.frustumCulled = false;
+    cube.add(cubeLines);
+    var cubeHeart = new T.Mesh(new T.BoxGeometry(0.5, 0.5, 0.5), redGlow);
+    cube.add(cubeHeart);
+    cube.userData.heart = cubeHeart;
+    cube.scale.setScalar(1.25);
+    station("proof", 0.4, -5.5, cube);
+
+    /* Lorenz attractor: the "butterfly" of chaos theory, traced as a red-to-steel trail that draws itself,
+       with a bright point running along the path */
+    var lorPts = [], lorCol = [], lx = 0.1, ly = 0, lz = 0, lcA = new T.Color(RED), lcB = new T.Color(GOLD), lmix = new T.Color();
+    for (var li = 0; li < 7200; li++) {
+      var ldx = 10 * (ly - lx), ldy = lx * (28 - lz) - ly, ldz = lx * ly - (8 / 3) * lz;
+      lx += ldx * 0.005; ly += ldy * 0.005; lz += ldz * 0.005;
+      if (li < 300) continue;
+      lorPts.push(lx * 0.085, (lz - 25) * 0.085, ly * 0.085);
+      lmix.copy(lcA).lerp(lcB, 0.5 + 0.5 * Math.sin(li * 0.004)); lorCol.push(lmix.r, lmix.g, lmix.b);
+    }
+    var lorGeo = new T.BufferGeometry();
+    lorGeo.setAttribute("position", new T.Float32BufferAttribute(lorPts, 3));
+    lorGeo.setAttribute("color", new T.Float32BufferAttribute(lorCol, 3));
+    var lorenz = new T.Group(), lorLine = new T.Line(lorGeo, new T.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85 }));
+    var lorHead = new T.Mesh(new T.SphereGeometry(0.07, 12, 8), glowMat(ICE, 1));
+    lorenz.add(lorLine, lorHead);
+    lorenz.userData.count = lorPts.length / 3;
+    station("log", 0.36, -5, lorenz);
+  }
+
+  /* every version: the planetary gear set is the heart of a power core. Three containment rings orbit it on
+     tilted axes, six clamp pylons hold it in an armoured ring, and the whole core beats like a heart. */
+  var coreGlow = glowMat(RED, 1), eyeShell = new T.Group(), orbits = [], pylons = [];
+  [[4.55, 0.4, 0], [4.85, -0.5, 0.9], [5.15, 1.1, -0.6]].forEach(function (o, i) {
+    var arc = new T.Group();
+    arc.add(new T.Mesh(new T.TorusGeometry(o[0], 0.05, 8, 140, Math.PI * 1.55), i === 1 ? gold : crimson));
+    arc.add(new T.Mesh(new T.TorusGeometry(o[0], 0.016, 6, 140, Math.PI * 1.55), coreGlow));
+    arc.children[1].position.z = 0.07;
+    var node = new T.Mesh(new T.SphereGeometry(0.13, 12, 10), coreGlow);
+    node.position.set(o[0], 0, 0); arc.add(node);
+    arc.rotation.set(o[1], o[2], 0); arc.userData.tilt = [o[1], o[2]]; arc.userData.sp = (i % 2 ? -1 : 1) * (0.22 + i * 0.08);
+    eyeShell.add(arc); orbits.push(arc);
+  });
+  for (var pI = 0; pI < 6; pI++) {
+    var pa = (pI / 6) * Math.PI * 2 + Math.PI / 6, pylon = new T.Group(), pyGeo = new T.BoxGeometry(1.15, 0.42, 0.5);
+    var body = new T.Mesh(pyGeo, gunmetal); body.add(new T.LineSegments(new T.EdgesGeometry(pyGeo), edge(GOLD, 0.6)));
+    var strip = new T.Mesh(new T.BoxGeometry(0.9, 0.07, 0.04), coreGlow); strip.position.z = 0.27;
+    pylon.add(body, strip);
+    pylon.position.set(4.25 * Math.cos(pa), 4.25 * Math.sin(pa), 0); pylon.rotation.z = pa;
+    pylon.userData.a = pa; eyeShell.add(pylon); pylons.push(pylon);
+  }
+  var armour = new T.Group();
+  for (var aI = 0; aI < 14; aI++) {
+    var aa = (aI / 14) * Math.PI * 2, plateGeo = new T.BoxGeometry(1.0, 0.36, 0.3), plate = new T.Mesh(plateGeo, crimson);
+    plate.position.set(3.72 * Math.cos(aa), 3.72 * Math.sin(aa), -0.15); plate.rotation.z = aa + Math.PI / 2;
+    plate.add(new T.LineSegments(new T.EdgesGeometry(plateGeo), edge(GOLD, 0.5)));
+    armour.add(plate);
+  }
+  var irisA = new T.Mesh(new T.TorusGeometry(3.42, 0.035, 8, 120), coreGlow);
+  var irisB = new T.Mesh(new T.TorusGeometry(4.08, 0.014, 6, 120), glowMat(RED, 0.6));
+  eyeShell.add(armour, irisA, irisB);
+  eyeShell.scale.setScalar(0.86);
+  rig.add(eyeShell);
+
   /* ---------- glow ---------- */
   var composer = null;
   /* glow only suits the dark version; on a bright background it would wash everything out */
@@ -343,7 +496,11 @@
     try {
       composer = new T.EffectComposer(renderer);
       composer.addPass(new T.RenderPass(scene, cam));
-      composer.addPass(new T.UnrealBloomPass(new T.Vector2(innerWidth, innerHeight), 0.8, 0.65, 0.3));
+      var bloom = new T.UnrealBloomPass(new T.Vector2(innerWidth, innerHeight), 0.6, 0.5, 0.82);   /* high threshold: only lights glow; metal reflections stay crisp */
+      /* the glow is a blur, so it is computed at screen-pixel size even on sharp (high-DPI) screens: same look, a fraction of the work */
+      var bloomSize = bloom.setSize.bind(bloom);
+      bloom.setSize = function (w, h) { var f = Math.max(1, renderer.getPixelRatio()); bloomSize(Math.ceil(w / f), Math.ceil(h / f)); };
+      composer.addPass(bloom);
     } catch (e) { composer = null; }
   }
 
@@ -376,7 +533,7 @@
       var r = el.getBoundingClientRect(), mid = r.top + window.scrollY + r.height * o.userData.an - H / 2;
       o.position.x = visW * o.userData.xf * ((CAM_Z - o.position.z) / CAM_Z);
       o.position.y = -(mid / H) * 3;
-      o.scale.setScalar(tight ? 0.6 : 1);
+      o.scale.setScalar((tight ? 0.6 : 1) * (o.userData.size || 1));
     });
     if (calm) draw(0);
   }
@@ -425,7 +582,10 @@
     });
 
     arcs.forEach(function (a) { a.rotation.z = a.userData.base + Math.sin(t * a.userData.sp) * a.userData.sw; });
-    floaters.forEach(function (g) { g.rotation.z = t * g.userData.sp; g.rotation.y += 0.0015; });
+    floaters.forEach(function (g) {
+      if (g.userData.head) { g.rotation.y = Math.sin(t * 0.4 + g.userData.sp * 9) * 0.7; g.position.x += Math.sin(t * 0.3 + g.userData.sp * 5) * 0.004; }
+      else { g.rotation.z = t * g.userData.sp; g.rotation.y += 0.0015; }
+    });
     dust.rotation.y = Math.sin(t * 0.05) * 0.08;
     dust.position.y = (t * 0.12) % 2;
     globe.rotation.y = t * 0.12; globe.rotation.x = 0.3 + sy * 0.2;
@@ -443,7 +603,7 @@
     }
 
     /* only draw and animate what is near the camera */
-    for (var v = 0; v < stations.length; v++) stations[v].visible = Math.abs(stations[v].position.y - camY) < 10;
+    for (var v = 0; v < stations.length; v++) stations[v].visible = Math.abs(stations[v].position.y - camY) < (stations[v].userData.range || 10);
     for (v = 0; v < floaters.length; v++) floaters[v].visible = Math.abs(floaters[v].position.y - camY) < 9;
     for (v = 0; v < levels.length; v++) levels[v].visible = Math.abs(levels[v].position.y - camY) < 12;
     rig.visible = scr < H * 2.4;
@@ -492,14 +652,51 @@
     gy[1].rotation.x = t * 0.9;
     gy[2].rotation.y = t * 1.3;
 
+    /* power core: a heartbeat (two quick pulses, then rest), orbiting containment rings, and on scroll
+       the rings, pylons and armour move apart into an exploded view */
+    var beat = calm ? 0 : (function (ph) { return Math.exp(-Math.pow((ph - 0.08) / 0.05, 2)) + 0.6 * Math.exp(-Math.pow((ph - 0.28) / 0.05, 2)); })((t * 0.9) % 1);
+    irisA.scale.setScalar(1 + beat * 0.045); irisB.scale.setScalar(1 + beat * 0.03);
+    irisA.material.opacity = 1; irisB.material.opacity = 0.45 + beat * 0.5;
+    core.scale.setScalar(1 + beat * 0.25); coreLight.intensity = 1.1 + beat * 0.7;   /* soft pulse: a stronger flash washed the gears out */
+    orbits.forEach(function (o, i) { o.rotation.set(o.userData.tilt[0] + ex * 0.6 * (i - 1), o.userData.tilt[1] + t * o.userData.sp * 0.6, t * o.userData.sp); o.position.z = (i - 1) * ex * 1.8; });
+    pylons.forEach(function (p) { var r = 4.25 + ex * 1.3 - beat * 0.08; p.position.set(r * Math.cos(p.userData.a), r * Math.sin(p.userData.a), ex * 0.8); });
+    armour.rotation.z = -t * 0.12; armour.position.z = -ex * 2.4;
+    irisA.position.z = ex * 0.8; irisB.position.z = -ex * 1.6;
+    if (sent) {
+      var hI;
+      stations.forEach(function (o) { if (o.userData.id === "log") o.rotation.y = 0.6 + t * 0.35; if (o.userData.id === "arsenal") o.rotation.y = -0.5 + Math.sin(t * 0.3) * 0.45; });
+      /* hypercube: rotate in two 4D planes, then project down to 3D */
+      var ca = Math.cos(t * 0.55), sa = Math.sin(t * 0.55), cb = Math.cos(t * 0.37), sb = Math.sin(t * 0.37), P3 = [];
+      for (var q = 0; q < 16; q++) {
+        var v4 = V4[q], x4 = v4[0] * ca - v4[3] * sa, w4 = v4[0] * sa + v4[3] * ca, y4 = v4[1] * cb - w4 * sb;
+        w4 = v4[1] * sb + w4 * cb;
+        var kk = 1.7 / (2.8 - w4);
+        P3.push(x4 * kk, y4 * kk, v4[2] * kk);
+      }
+      for (q = 0; q < E4.length; q++) {
+        var ea = E4[q][0] * 3, eb = E4[q][1] * 3, o6 = q * 6;
+        cubeArr[o6] = P3[ea]; cubeArr[o6 + 1] = P3[ea + 1]; cubeArr[o6 + 2] = P3[ea + 2];
+        cubeArr[o6 + 3] = P3[eb]; cubeArr[o6 + 4] = P3[eb + 1]; cubeArr[o6 + 5] = P3[eb + 2];
+      }
+      cubeGeo.attributes.position.needsUpdate = true;
+      for (var nI = 0; nI < ndSolids.length; nI++) if (ndSolids[nI].visible) ndStep(ndSolids[nI], t);
+      /* the attractor draws itself over about 12 s, holds, then starts again */
+      var lorN = lorenz.userData.count, lorDrawn = Math.min(lorN, Math.floor(((t * 600) % (lorN * 1.35))));
+      lorLine.geometry.setDrawRange(0, Math.max(2, lorDrawn));
+      var lh = Math.min(lorN - 1, Math.max(0, lorDrawn - 1)) * 3;
+      lorHead.position.set(lorPts[lh], lorPts[lh + 1], lorPts[lh + 2]);
+    }
+
     if (composer && quality >= 2) composer.render(); else renderer.render(scene, cam);
   }
 
   /* Watches how long frames take. If the device is struggling, quality drops one step and stays there. */
   var lastMs = 0, slow = 0, counted = 0, settle = 40;
+  var dialogs = document.querySelectorAll("dialog");
+  function covered() { for (var i = 0; i < dialogs.length; i++) if (dialogs[i].open) return true; return false; }
   function loop(ms) {
     requestAnimationFrame(loop);
-    if (document.hidden) { lastMs = 0; return; }
+    if (document.hidden || covered()) { lastMs = 0; return; }   /* nothing to show: a project page or picture covers the scene */
     frameNo++;
     if (quality === 0 && (frameNo & 1)) return;            /* light mode: half frame rate */
     var dt = lastMs ? ms - lastMs : 16; lastMs = ms;

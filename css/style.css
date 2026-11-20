@@ -539,7 +539,6 @@ h2, .codename {
 [data-theme="reactor"] .btn-go, [data-theme="reactor"] .btn-go:hover { color: #021326; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7); filter: drop-shadow(0 8px 24px rgba(40, 170, 255, 0.65)); }
 [data-theme="reactor"] h2::after { background: linear-gradient(90deg, #0a6fe0, #5fe0ff 45%, #ffa55c); box-shadow: 0 0 18px 1px rgba(60, 190, 255, 0.7); }
 [data-theme="reactor"] .bar-progress i { background: linear-gradient(90deg, #0a6fe0, #5fe0ff 60%, #ffffff); box-shadow: 0 0 14px rgba(60, 190, 255, 0.9); }
-[data-theme="reactor"] .hero h1 { filter: drop-shadow(0 0 30px rgba(60, 190, 255, 0.55)); }
 [data-theme="reactor"] .sheet, [data-theme="reactor"] .dossier, [data-theme="reactor"] .readout-panel { border-image: linear-gradient(135deg, #ffffff, rgba(95, 224, 255, 0.3) 28%, rgba(255, 165, 92, 0.8) 52%, rgba(95, 224, 255, 0.3) 76%, #c9f6ff) 1; }
 [data-theme="reactor"] .bar { border-image: linear-gradient(90deg, transparent, rgba(95, 224, 255, 0.7) 30%, rgba(255, 165, 92, 0.6) 70%, transparent) 1; }
 [data-theme="reactor"] .build-meta span:first-child, [data-theme="reactor"] .rd-cat, [data-theme="reactor"] .hero-term::before { color: var(--hot); }
@@ -907,3 +906,157 @@ h2, .codename {
 
 /* laptops: keep the Previous / Next buttons clear of the read-outs in the bottom corners */
 @media (min-width: 60rem) { .hangar-pin { padding-bottom: 3.9rem; } }
+
+/* ==========================================================================
+   SENTINEL STEEL (?theme=sentinel): brushed steel and hard red on near black.
+   ========================================================================== */
+:root[data-theme="sentinel"] {
+  --gold-rgb: 174, 184, 194; --ice-rgb: 255, 92, 92; --red-rgb: 230, 20, 36; --bg-rgb: 5, 5, 7;
+  --bg: #040405; --bg-2: #0d0e11; --ink: #eef1f4; --ink-2: #a3abb4;
+  --amber: #aeb8c2; --red: #c8101c; --hot: #ff2a2a; --cyan: #ffd2d2; --hi: #e6ebf0;
+  --grad-title: linear-gradient(180deg, #ffffff 6%, #d3d9df 38%, #6a737c 70%, #e9edf1 96%);
+  --grad-btn: linear-gradient(100deg, #5a0008, #c8101c 50%, #ff2a2a);
+  --grad-btn-hi: linear-gradient(100deg, #7a000c, #e01220 50%, #ff5a5a);
+  scrollbar-color: #4a1015 var(--bg);
+}
+[data-theme="sentinel"] main::before {
+  background:
+    radial-gradient(ellipse 60% 55% at 85% 0%, rgba(230, 20, 36, 0.28), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 0% 100%, rgba(174, 184, 194, 0.08), transparent 70%),
+    radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.7));
+}
+[data-theme="sentinel"] h2::after { background: linear-gradient(90deg, #ff2a2a, #c8101c 45%, #aeb8c2); box-shadow: 0 0 16px rgba(255, 30, 40, 0.7); }
+[data-theme="sentinel"] .bar-progress i { background: linear-gradient(90deg, #7a000c, #ff2a2a 60%, #ffffff); box-shadow: 0 0 14px rgba(255, 30, 40, 0.9); }
+[data-theme="sentinel"] .wind { stroke: #ff2a2a; }
+[data-theme="sentinel"] .hex.on { background: linear-gradient(135deg, #ffffff, #ff2a2a); }
+
+/* ==========================================================================
+   REVIEW FIXES (2026-11-18): calmer, more formal, work-first
+   ========================================================================== */
+body::after { display: none; }                         /* scan-line overlay retired */
+.ghost { -webkit-text-stroke-color: rgba(var(--gold-rgb), 0.07); }
+.hero-term { display: none; }                          /* typed console line retired */
+
+/* always-visible CV download in the top bar */
+.bar-cv { min-height: 2.25rem; padding: 0.3rem 1rem; font-size: 0.8125rem; flex: none; }
+.bar { gap: 1rem; }
+
+/* built vs CAD-only tag on every project */
+.tag-built, .tag-cad { font: 600 0.6875rem var(--mono); letter-spacing: 0.1em; text-transform: uppercase; padding: 0.1rem 0.45rem; }
+.tag-built { color: #0b0b0b; background: var(--hi); }
+.tag-cad { color: var(--hi); box-shadow: inset 0 0 0 1px var(--line-2); }
+
+/* "Used in" / "Applied in" links from skills and certificates to projects */
+.used-in { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.7rem 0 0.9rem; }
+.used-in span { font: 500 0.75rem var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); margin-right: 0.2rem; }
+.used-in a { font: 500 0.8125rem var(--body); color: var(--ink); text-decoration: none; padding: 0.2rem 0.6rem; border: 1px solid var(--line-2); background: rgba(var(--gold-rgb), 0.06); transition: background 0.2s, color 0.2s; }
+.used-in a:hover { background: rgba(var(--gold-rgb), 0.2); color: #fff; }
+.readout-panel { min-height: 0; }
+@media (max-width: 47.99rem) {
+  .bar-cv { min-height: 2rem; padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+  .readout-panel .used-in { margin: 0.4rem 0 0; }
+  .readout-panel .used-in a { font-size: 0.75rem; padding: 0.15rem 0.45rem; }
+}
+[data-theme="sentinel"] .callout { display: none; }
+/* the name is always visible from the first frame; only the slow light band crosses it */
+.hero h1 { animation: none; clip-path: none; }
+@media (prefers-reduced-motion: no-preference) { .hero h1 { animation: shimmer 6s 1.5s ease-in-out infinite; } }
+
+/* certificate viewer: arrows on the screen, swipe on touch, counter */
+.vault-screen { touch-action: pan-y; }
+.vault-arrow {
+  position: absolute; top: 50%; z-index: 3; width: 2.9rem; height: 2.9rem; margin-top: -1.45rem; padding: 0; border: 0; cursor: pointer;
+  display: grid; place-items: center; color: #fff; background: rgba(var(--bg-rgb), 0.82); box-shadow: inset 0 0 0 1px var(--line-2);
+  clip-path: var(--notch); transition: background 0.2s, transform 0.2s var(--ease);
+}
+.vault-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.vault-arrow:hover { background: var(--red); }
+.vault-arrow:active { transform: scale(0.94); }
+.vault-arrow.prev { left: 0.7rem; }
+.vault-arrow.next { right: 0.7rem; }
+.vault-count { position: absolute; right: 0.9rem; bottom: 0.7rem; z-index: 3; margin: 0; padding: 0.15rem 0.5rem; font: 500 0.8125rem var(--mono); color: #fff; background: rgba(var(--bg-rgb), 0.82); }
+@media (max-width: 47.99rem) {
+  .vault-arrow { width: 2.5rem; height: 2.5rem; margin-top: -1.25rem; }
+  .vault-arrow.prev { left: 0.35rem; }
+  .vault-arrow.next { right: 0.35rem; }
+}
+
+/* small colour switch, fixed at the bottom right */
+.theme-dots { position: fixed; right: 0.55rem; bottom: 0.9rem; z-index: 25; display: grid; gap: 0.4rem; padding: 0.4rem 0.3rem; background: rgba(var(--bg-rgb), 0.75); box-shadow: inset 0 0 0 1px var(--line); border-radius: 999px; }
+.theme-dots button { width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; opacity: 0.6; transition: opacity 0.2s, transform 0.2s var(--ease); }
+.theme-dots button:hover, .theme-dots button:focus-visible { opacity: 1; transform: scale(1.2); }
+.theme-dots button[aria-pressed="true"] { opacity: 1; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--ink); }
+.theme-dots [data-th="sentinel"] { background: linear-gradient(135deg, #c9d0d6 50%, #e01220 50%); }
+.theme-dots [data-th="crimson"] { background: linear-gradient(135deg, #e6bf7a 50%, #b8141f 50%); }
+.theme-dots [data-th="reactor"] { background: linear-gradient(135deg, #5fe0ff 50%, #e08a45 50%); }
+.hud-br { right: calc(var(--gutter) + 2.2rem); }
+@media (max-width: 47.99rem) { .theme-dots { right: 0.45rem; top: 4.1rem; bottom: auto; } }   /* phones: just under the top bar, clear of the dock and buttons */
+
+/* ==========================================================================
+   SENTINEL STEEL, richer (2026-11-18): bolder, brighter red and cleaner steel
+   ========================================================================== */
+:root[data-theme="sentinel"] {
+  --gold-rgb: 200, 210, 220; --ice-rgb: 255, 120, 130; --red-rgb: 255, 26, 48;
+  --amber: #c8d2dc; --red: #e3101f; --hot: #ff2d40; --hi: #f3f6fa; --ink: #f4f6f8;
+  --grad-btn: linear-gradient(100deg, #8a000e, #e3101f 48%, #ff3a4c);
+  --grad-btn-hi: linear-gradient(100deg, #a8000f, #ff1a30 48%, #ff6a78);
+  --grad-title: linear-gradient(180deg, #ffffff 4%, #e2e7ec 36%, #8b949d 66%, #f4f7fa 96%);
+}
+[data-theme="sentinel"] main::before {
+  background:
+    radial-gradient(ellipse 62% 55% at 85% 0%, rgba(255, 26, 48, 0.36), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 5% 95%, rgba(255, 26, 48, 0.14), transparent 70%),
+    radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.7));
+}
+[data-theme="sentinel"] .btn-go { box-shadow: inset 0 0 0 1px rgba(255, 140, 150, 0.55); filter: drop-shadow(0 8px 24px rgba(255, 26, 48, 0.55)); }
+[data-theme="sentinel"] h2::after { background: linear-gradient(90deg, #ff2d40, #e3101f 45%, #c8d2dc); box-shadow: 0 0 18px rgba(255, 30, 50, 0.85); }
+[data-theme="sentinel"] .bar-progress i { background: linear-gradient(90deg, #a8000f, #ff2d40 60%, #fff); box-shadow: 0 0 16px rgba(255, 30, 50, 1); }
+[data-theme="sentinel"] .tag-built { background: #f3f6fa; }
+[data-theme="sentinel"] .hex.on { background: linear-gradient(135deg, #ffffff, #ff2d40); }
+
+/* the rotating reactor in Projects: brighter red windings, white-hot band, stronger glow and sweep */
+[data-theme="sentinel"] .ring { color: #c8d2dc; }
+[data-theme="sentinel"] .wind { stroke: #ff2d40; stroke-width: 4; opacity: 1; }
+[data-theme="sentinel"] .clamp { stroke: #f3f6fa; }
+[data-theme="sentinel"] .coil { fill: rgba(20, 4, 8, 0.95); stroke: #f3f6fa; }
+[data-theme="sentinel"] .rx-glow { stroke: rgba(255, 40, 60, 0.75); opacity: 0.55; }
+[data-theme="sentinel"] .rx-line { stroke: #fff; stroke-width: 3; }
+[data-theme="sentinel"] .rx-hub { stroke: rgba(255, 45, 64, 0.6); }
+[data-theme="sentinel"] .rx-bolt { fill: #ff2d40; opacity: 0.9; }
+[data-theme="sentinel"] .ring::before { background: radial-gradient(circle, transparent 50%, rgba(255, 26, 48, 0.42) 64%, rgba(255, 26, 48, 0.18) 76%, transparent 84%); }
+[data-theme="sentinel"] .ring::after { background: conic-gradient(from 0deg, transparent 0 70%, rgba(255, 45, 64, 0.45) 84%, #ffffff 96%, transparent 100%), conic-gradient(from 180deg, transparent 0 84%, #ff2d40 97%, transparent 100%); }
+[data-theme="sentinel"] .node.on circle { stroke: #ff2d40; }
+[data-theme="sentinel"] .node.on .node-dot { fill: #ff2d40; }
+
+/* ==========================================================================
+   SENTINEL STEEL, blood red (2026-11-18): deep, saturated red with no pink.
+   Keep this block last so it wins over the earlier Sentinel blocks.
+   ========================================================================== */
+:root[data-theme="sentinel"] {
+  --red-rgb: 190, 0, 18; --ice-rgb: 235, 20, 36;
+  --red: #a8000e; --hot: #d4001a;
+  --grad-btn: linear-gradient(100deg, #5c0007, #a8000e 50%, #d4001a);
+  --grad-btn-hi: linear-gradient(100deg, #6e0008, #c0000f 50%, #e8001d);
+  scrollbar-color: #5c0007 var(--bg);
+}
+[data-theme="sentinel"] main::before {
+  background:
+    radial-gradient(ellipse 62% 55% at 85% 0%, rgba(170, 0, 14, 0.42), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 5% 95%, rgba(140, 0, 12, 0.2), transparent 70%),
+    radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.72));
+}
+[data-theme="sentinel"] .btn-go { box-shadow: inset 0 0 0 1px rgba(255, 60, 70, 0.35); filter: drop-shadow(0 8px 22px rgba(190, 0, 18, 0.6)); }
+[data-theme="sentinel"] h2::after { background: linear-gradient(90deg, #d4001a, #8a000b 55%, #c8d2dc); box-shadow: 0 0 16px rgba(200, 0, 20, 0.85); }
+[data-theme="sentinel"] .bar-progress i { background: linear-gradient(90deg, #6e0008, #d4001a 70%, #ff3030); box-shadow: 0 0 14px rgba(210, 0, 22, 1); }
+[data-theme="sentinel"] .hex.on { background: linear-gradient(135deg, #e6ebf0, #c0000f); }
+[data-theme="sentinel"] .wind, [data-theme="sentinel"] .rx-bolt { stroke: #d4001a; fill: #d4001a; }
+[data-theme="sentinel"] .rx-glow { stroke: rgba(200, 0, 20, 0.85); }
+[data-theme="sentinel"] .ring::before { background: radial-gradient(circle, transparent 50%, rgba(190, 0, 18, 0.45) 64%, rgba(150, 0, 14, 0.2) 76%, transparent 84%); }
+[data-theme="sentinel"] .ring::after { background: conic-gradient(from 0deg, transparent 0 70%, rgba(200, 0, 20, 0.5) 84%, #ffe0e0 96%, transparent 100%), conic-gradient(from 180deg, transparent 0 84%, #d4001a 97%, transparent 100%); }
+[data-theme="sentinel"] .node.on circle { stroke: #d4001a; }
+[data-theme="sentinel"] .node.on .node-dot { fill: #d4001a; }
+.theme-dots [data-th="sentinel"] { background: linear-gradient(135deg, #c9d0d6 50%, #b0000f 50%); }
+
+/* performance: the fixed top bar no longer blurs the moving 3D scene behind it (that blur is recomputed
+   every frame); at this opacity the difference is not visible */
+.bar { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(var(--bg-rgb), 0.93); }

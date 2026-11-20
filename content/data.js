@@ -50,7 +50,7 @@ window.PORTFOLIO = {
   */
   projects: [
     {
-      id: "animatronic-eyes", mark: "MK-02", codename: "Gaze", type: "robotics", rank: 2,
+      id: "animatronic-eyes", mark: "MK-02", codename: "Gaze", type: "robotics", rank: 2, built: true,
       shows: ["Mechanism design","Servo actuation","Behaviour programming","3D printing"],
       title: "Animatronic eyes",
       summary: "A working pair of animatronic eyes: 3D-printed eyeballs and eyelids moved by micro servos, programmed to look around, twitch and sleep on their own.",
@@ -65,7 +65,7 @@ window.PORTFOLIO = {
       gallery: shots("animatronic-eyes", 1), model: "", links: {}
     },
     {
-      id: "line-follower", mark: "MK-01", codename: "Pathfinder", type: "robotics", rank: 1,
+      id: "line-follower", mark: "MK-01", codename: "Pathfinder", type: "robotics", rank: 1, built: true,
       shows: ["Embedded electronics","Sensor arrays","Mould making","Mechanical assembly"],
       title: "Line-following robot",
       summary: "A line-following robot built from scratch: a hand-wired control board with an OLED menu, a curved sensor array out front, and wheels cast in moulds I designed and printed.",
@@ -80,7 +80,7 @@ window.PORTFOLIO = {
       gallery: shots("line-follower", 4), model: "", links: {}
     },
     {
-      id: "robot-arm", mark: "MK-04", codename: "Longreach", type: "robotics", rank: 4,
+      id: "robot-arm", mark: "MK-04", codename: "Longreach", type: "robotics", rank: 4, built: true,
       shows: ["Robot arm design","Servo joints","3D printing","Manual control wiring"],
       title: "Robotic arm",
       summary: "A 3D-printed robotic arm I designed, printed and wired: servo joints on a rotating base, driven by hand from two joysticks and two dials.",
@@ -170,7 +170,7 @@ window.PORTFOLIO = {
       gallery: shots("hexapod", 1), model: "", links: {}
     },
     {
-      id: "soccerbot", mark: "MK-05", codename: "Striker", type: "robotics", rank: 5,
+      id: "soccerbot", mark: "MK-05", codename: "Striker", type: "robotics", rank: 5, built: true,
       shows: ["Sheet metal design","Drivetrain layout","Electronics packaging"],
       title: "SoccerBot",
       summary: "A four-wheel-drive soccer robot with a folded sheet-metal body, front scoops and a vented cover over the motors, battery and speed controllers.",
@@ -230,7 +230,7 @@ window.PORTFOLIO = {
       gallery: shots("seeder", 1), model: "", links: {}
     },
     {
-      id: "rc-aircraft", mark: "MK-07", codename: "Kestrel", type: "machines", rank: 7,
+      id: "rc-aircraft", mark: "MK-07", codename: "Kestrel", type: "machines", rank: 7, built: true,
       shows: ["Aerodynamics","Airframe structure","Radio control"],
       title: "RC aircraft and drones",
       summary: "RC aircraft worked out in CAD before they are built: a high-wing airplane on a boom fuselage with landing gear, and a twin-propeller delta wing.",
@@ -245,7 +245,7 @@ window.PORTFOLIO = {
       gallery: shots("rc-aircraft", 2), model: "", links: {}
     },
     {
-      id: "otto-bot", mark: "MK-15", codename: "Tiptoe", type: "robotics", rank: 15,
+      id: "otto-bot", mark: "MK-15", codename: "Tiptoe", type: "robotics", rank: 15, built: true,
       shows: ["Arduino","Embedded programming"],
       title: "Otto Bot",
       summary: "An Otto walking robot built and programmed on Arduino.",
@@ -260,7 +260,7 @@ window.PORTFOLIO = {
       gallery: ["", ""], model: "", links: {}
     },
     {
-      id: "vent-clip", mark: "MK-14", codename: "Patch", type: "parts", rank: 14,
+      id: "vent-clip", mark: "MK-14", codename: "Patch", type: "parts", rank: 14, built: true,
       shows: ["Reverse engineering","3D printing","Repair"],
       title: "Replacement vent clip",
       summary: "A broken plastic vent clip, measured, remodelled and 3D printed. The white print sits beside the black original.",
@@ -275,7 +275,7 @@ window.PORTFOLIO = {
       gallery: shots("vent-clip", 1), model: "", links: {}
     },
     {
-      id: "voice-assistant", mark: "MK-16", codename: "Echo", type: "software", rank: 16,
+      id: "voice-assistant", mark: "MK-16", codename: "Echo", type: "software", rank: 16, built: true,
       shows: ["Python","Automation"],
       title: "Voice-command assistant",
       summary: "A basic assistant written in Python that responds to voice commands.",
@@ -297,54 +297,47 @@ window.PORTFOLIO = {
   */
   achievements: [
     { title: "Working Committee 2026: Assistant IT & Resource Officer", date: "2026", issuer: "CADers", media: "assets/certificates/caders-committee.jpg" },
-    { title: "SOLIDWORKS Design Associate (CSWA)", date: "Jul 2026", issuer: "Dassault Systèmes", media: "assets/certificates/cswa.pdf", id: "C-Z3WV8RSXFY" },
-    { title: "SOLIDWORKS Electrical Design Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/electrical.pdf", id: "C-5C2FEJ3AHB" },
-    { title: "SOLIDWORKS Additive Manufacturing Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/additive-manufacturing.pdf", id: "C-B2SGNQPY5H" },
+    { title: "SOLIDWORKS Design Associate (CSWA)", date: "Jul 2026", issuer: "Dassault Systèmes", media: "assets/certificates/cswa.pdf", projects: ["animatronics","hexapod","wishbone","robot-arm"], id: "C-Z3WV8RSXFY" },
+    { title: "SOLIDWORKS Electrical Design Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/electrical.pdf", projects: ["line-follower","robot-arm"], id: "C-5C2FEJ3AHB" },
+    { title: "SOLIDWORKS Additive Manufacturing Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/additive-manufacturing.pdf", projects: ["robot-arm","animatronic-eyes","vent-clip","compliant-clip"], id: "C-B2SGNQPY5H" },
     { title: "SOLIDWORKS Sustainability Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/sustainability.pdf", id: "C-Y6UXGTP3ZE" },
     { title: "SOLIDWORKS xDesign Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/xdesign.pdf", id: "C-F6XCME458L" },
-    { title: "SOLIDWORKS xShape Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/xshape.pdf", id: "C-W8DY4LCJBU" },
-    { title: "SOLIDWORKS xMold Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/xmold.pdf", id: "C-9V7B6U4QFL" }
+    { title: "SOLIDWORKS xShape Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/xshape.pdf", projects: ["race-car"], id: "C-W8DY4LCJBU" },
+    { title: "SOLIDWORKS xMold Associate", date: "Aug 2026", issuer: "Dassault Systèmes", media: "assets/certificates/xmold.pdf", projects: ["line-follower"], id: "C-9V7B6U4QFL" }
   ],
 
-  /* Each tool or skill: its name and, if you like, where it shows up.
-     Keep one entry per skill; put near-duplicates in the note instead of adding a new line. */
+  /* Each skill: a short note and the projects where it was used (project ids from the list above).
+     Reviewers asked for fewer skills and a clear link to the work, so keep this list short. */
   skills: {
-    "CAD tools": [
-      { name: "SolidWorks", usedIn: "Certified: CSWA, xDesign, xShape" },
-      { name: "AutoCAD", usedIn: "" },
-      { name: "Blender", usedIn: "" },
-      { name: "KeyShot", usedIn: "" }
+    "CAD": [
+      { name: "SolidWorks", usedIn: "CSWA certified, plus five associate certifications", projects: ["animatronics", "hexapod", "wishbone", "race-car"] },
+      { name: "AutoCAD", usedIn: "2D drafting", projects: [] },
+      { name: "KeyShot and Blender", usedIn: "Rendering and visualisation", projects: [] }
     ],
     "Mechanical design": [
-      { name: "Mechanism design", usedIn: "Linkages and compliant parts: animatronic eyes, suspension, clip" },
-      { name: "Gear train design", usedIn: "" },
-      { name: "Assemblies and drawings", usedIn: "Animatronic skull, hexapod" },
-      { name: "Sheet metal design", usedIn: "SoccerBot body, robot chassis" },
-      { name: "Reverse engineering", usedIn: "Replacement vent clip, compliant clip" },
-      { name: "Airframe design", usedIn: "RC aircraft" },
-      { name: "Motion study", usedIn: "" }
+      { name: "Mechanism design", usedIn: "Linkages, joints and compliant parts", projects: ["animatronic-eyes", "wishbone", "robot-arm", "compliant-clip"] },
+      { name: "Large assemblies", usedIn: "Hundreds of mated parts", projects: ["animatronics", "hexapod", "race-car"] },
+      { name: "Sheet metal design", usedIn: "Folded bodies and chassis", projects: ["soccerbot", "shield-chassis"] },
+      { name: "Reverse engineering", usedIn: "Measured, remodelled and reprinted", projects: ["vent-clip", "compliant-clip"] },
+      { name: "Airframe design", usedIn: "RC aircraft", projects: ["rc-aircraft"] }
     ],
-    Analysis: [
-      { name: "ANSYS", usedIn: "" },
-      { name: "Sustainability assessment", usedIn: "SOLIDWORKS certified associate" }
+    "Analysis": [
+      { name: "ANSYS", usedIn: "Structural analysis", projects: [] }
     ],
-    Fabrication: [
-      { name: "3D printing", usedIn: "Designing for print and printing; certified associate" },
-      { name: "Mould making", usedIn: "Line-follower wheels; xMold certified" },
-      { name: "Machining", usedIn: "" },
-      { name: "Welding", usedIn: "" },
-      { name: "Soldering", usedIn: "Line-following robot" }
+    "Fabrication": [
+      { name: "3D printing", usedIn: "Additive Manufacturing certified", projects: ["robot-arm", "animatronic-eyes", "vent-clip"] },
+      { name: "Mould making", usedIn: "xMold certified", projects: ["line-follower"] },
+      { name: "Soldering", usedIn: "Hand-wired control boards", projects: ["line-follower", "robot-arm"] },
+      { name: "Machining and welding", usedIn: "Workshop practice", projects: [] }
     ],
-    Electronics: [
-      { name: "Circuit design", usedIn: "Control boards, sensor arrays; SOLIDWORKS Electrical certified" },
-      { name: "Servo and stepper motors", usedIn: "Robotic arm, hexapod, drawing machine" },
-      { name: "Arduino", usedIn: "Otto Bot" },
-      { name: "Raspberry Pi", usedIn: "" }
+    "Electronics": [
+      { name: "Circuit design", usedIn: "Electrical Design certified", projects: ["line-follower", "robot-arm"] },
+      { name: "Servo and stepper motors", usedIn: "Joints and motion axes", projects: ["robot-arm", "animatronic-eyes", "hexapod", "drawing-machine"] },
+      { name: "Arduino", usedIn: "Microcontroller projects", projects: ["line-follower", "animatronic-eyes"] }
     ],
-    Software: [
-      { name: "Python", usedIn: "Voice-command assistant" },
-      { name: "C++", usedIn: "" },
-      { name: "Java", usedIn: "" }
+    "Programming": [
+      { name: "C++", usedIn: "Robot control code", projects: ["line-follower", "animatronic-eyes"] },
+      { name: "Python", usedIn: "Automation", projects: [] }
     ]
   },
 

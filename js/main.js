@@ -14,7 +14,7 @@
     if (/\.pdf$/i.test(src)) return '<a class="doc" href="' + esc(src) + '" target="_blank" rel="noopener" data-pdf="' + esc(src) + '" aria-label="Open ' + esc(title) + '">' + ph + "</a>";
     /* a video: plays in place, silent until the visitor turns the sound on */
     if (/\.(mp4|webm)$/i.test(src)) return '<video src="' + esc(src) + '#t=0.1" controls muted loop playsinline preload="metadata" aria-label="' + esc(title) + '"></video>';
-    return '<img src="' + esc(src) + '" alt="' + esc(title) + '" loading="lazy" data-ph="' + esc(ph) + '">';
+    return '<img src="' + esc(src) + '" alt="' + esc(title) + '" loading="lazy" decoding="async" data-ph="' + esc(ph) + '">';
   }
   document.addEventListener("error", function (e) {
     var t = e.target;
@@ -42,15 +42,23 @@
       var lib = window.pdfjsLib;
       if (!lib) return;
       lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-      slots.forEach(function (a) {
-        lib.getDocument(a.dataset.pdf).promise.then(function (d) { return d.getPage(1); }).then(function (pg) {
+      /* one certificate at a time, each in an idle moment, so drawing them never stalls scrolling */
+      var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 60); };
+      var queue = slots.slice();
+      (function next() {
+        var a = queue.shift();
+        if (!a) return;
+        idle(function () { renderOne(a).then(next, next); });
+      })();
+      function renderOne(a) {
+        return lib.getDocument(a.dataset.pdf).promise.then(function (d) { return d.getPage(1); }).then(function (pg) {
           var v = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 1000 / v.width }), cv = document.createElement("canvas");
           cv.width = vp.width; cv.height = vp.height;
           return pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise.then(function () {
-            a.innerHTML = '<img src="' + cv.toDataURL("image/jpeg", 0.85) + '" alt="' + esc(a.getAttribute("aria-label").replace(/^Open /, "")) + '">';
+            a.innerHTML = '<img src="' + cv.toDataURL("image/jpeg", 0.85) + '" alt="' + esc(a.getAttribute("aria-label").replace(/^Open /, "")) + '" decoding="async">';
           });
         }).catch(function () {});
-      });
+      }
     }
     var sc = document.createElement("script");
     sc.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
@@ -64,6 +72,11 @@
   var pics = function (p) { return (p.gallery || []).filter(Boolean); };
   D.projects = D.projects.filter(function (p) { return p.thumb || pics(p).length; })
     .sort(function (a, b) { return (a.rank || 99) - (b.rank || 99); });
+  var builtTag = function (p) { return p.built ? '<span class="tag-built">Built</span>' : '<span class="tag-cad">CAD design</span>'; };
+  var projLinks = function (ids, label) {
+    var ps = (ids || []).map(function (id) { return D.projects.filter(function (p) { return p.id === id; })[0]; }).filter(Boolean);
+    return ps.length ? '<p class="used-in"><span>' + label + "</span>" + ps.map(function (p) { return '<a href="#/project/' + esc(p.id) + '">' + esc(p.title) + "</a>"; }).join("") + "</p>" : "";
+  };
   var chips = function (p) {
     return p.shows && p.shows.length ? '<ul class="chips">' + p.shows.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ul>" : "";
   };
@@ -79,7 +92,7 @@
     boot.remove(); boot = null;
     try { sessionStorage.setItem("booted", "1"); } catch (e) {}
   }
-  if (calm || document.documentElement.classList.contains("no-boot")) endBoot();
+  if (!boot || calm || document.documentElement.classList.contains("no-boot")) endBoot();
   else {
     setTimeout(endBoot, 2300);
     addEventListener("keydown", endBoot, { once: true });
@@ -108,7 +121,15 @@
   }).join("");
   $("foot-name").textContent = o.name + " · " + new Date().getFullYear();
   var th = document.documentElement.getAttribute("data-theme") || "crimson";
-  [].forEach.call(document.querySelectorAll(".themes a"), function (a) { if (a.dataset.th === th) a.setAttribute("aria-current", "true"); });
+  /* colour switch: the 3D scene is built for one palette, so a switch saves the choice and reloads */
+  [].forEach.call(document.querySelectorAll(".theme-dots button"), function (b) {
+    if (b.dataset.th === th) b.setAttribute("aria-pressed", "true"); else b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      if (b.dataset.th === th) return;
+      try { localStorage.setItem("theme", b.dataset.th); } catch (e) {}
+      location.href = location.pathname + "?theme=" + b.dataset.th + location.hash;
+    });
+  });
   $("copy").addEventListener("click", function () {
     var b = this;
     (navigator.clipboard ? navigator.clipboard.writeText(o.email) : Promise.reject()).then(function () {
@@ -136,7 +157,7 @@
     $("bay").innerHTML =
       '<div class="frame bay-media">' + media(p.thumb || (p.gallery || [])[0], p.id, p.title) + "</div>" +
       '<div class="bay-text">' +
-      '<p class="build-meta"><span>' + esc(p.mark) + "</span><span>" + esc(TYPES[p.type] || p.type) + "</span>" + sampleTag(p) + "</p>" +
+      '<p class="build-meta"><span>' + esc(p.mark) + "</span><span>" + esc(TYPES[p.type] || p.type) + "</span>" + builtTag(p) + "</p>" +
       '<h3 class="codename">' + esc(p.codename || p.title) + "</h3>" +
       (p.codename ? '<p class="bay-title">' + esc(p.title) + "</p>" : "") +
       '<p class="bay-sum">' + esc(p.summary) + "</p>" +
@@ -156,7 +177,7 @@
     hangar.style.height = "calc(100svh + " + Math.round((list.length - 1) * clamp(700 / list.length, 30, 70)) + "vh)";
     $("ring").innerHTML = Draw.ring(list, STEP);
     ringG = document.querySelector("#ring svg");   /* the whole drawing turns as one layer, which is cheap */
-    $("hangar-lede").textContent = list.length + (list.length === 1 ? " build" : " builds") + " on the ring. Scroll to turn it.";
+    $("hangar-lede").textContent = list.length + (list.length === 1 ? " project" : " projects") + ". Built hardware first, then CAD design.";
     $("filters").innerHTML = Object.keys(TYPES).map(function (t) {
       var n = t === "all" ? D.projects.length : D.projects.filter(function (p) { return p.type === t; }).length;
       return n ? '<button type="button" data-type="' + t + '" aria-pressed="' + (t === filter) + '">' + TYPES[t] + " <span>" + n + "</span></button>" : "";
@@ -172,7 +193,7 @@
     $("bay").innerHTML = list.map(function (p, i) {
       return '<article class="card" data-i="' + i + '"><div class="card-media">' + media(p.thumb || (p.gallery || [])[0], p.id, p.title) +
         '<span class="card-mark">' + esc(p.mark) + '</span></div><div class="card-body">' +
-        '<p class="build-meta"><span>' + esc(TYPES[p.type] || p.type) + "</span></p>" +
+        '<p class="build-meta"><span>' + esc(TYPES[p.type] || p.type) + "</span>" + builtTag(p) + "</p>" +
         '<h3 class="codename">' + esc(p.codename || p.title) + "</h3>" +
         (p.codename ? '<p class="bay-title">' + esc(p.title) + "</p>" : "") +
         '<p class="bay-sum">' + esc(p.summary) + "</p>" + stat(p) +
@@ -197,9 +218,9 @@
   $("bay").addEventListener("scroll", deckMove, { passive: true });
   $("bay").addEventListener("touchstart", function () { deckTouched = true; }, { passive: true, once: true });
 
-  function turnRing() {
+  function turnRing(rect) {
     if (hangar.classList.contains("deck")) return;
-    var s = span(), p = s > 0 ? clamp(-hangar.getBoundingClientRect().top / s, 0, 1) : 0;
+    var s = span(), p = s > 0 ? clamp(-(rect || hangar.getBoundingClientRect()).top / s, 0, 1) : 0;
     var pos = p * (list.length - 1), i = Math.round(pos);
     if (ringG) ringG.style.transform = "rotate(" + (-pos * STEP).toFixed(2) + "deg)";
     if (i !== active) { active = i; renderBay(); }
@@ -242,7 +263,7 @@
     }).join("");
 
     $("dossier-in").innerHTML =
-      '<header class="dossier-head"><p class="build-meta"><span>' + esc(p.mark) + "</span><span>" + esc(TYPES[p.type] || p.type) + "</span>" + sampleTag(p) + "</p>" +
+      '<header class="dossier-head"><p class="build-meta"><span>' + esc(p.mark) + "</span><span>" + esc(TYPES[p.type] || p.type) + "</span>" + builtTag(p) + "</p>" +
       '<button class="btn" type="button" id="dossier-close">Close</button></header>' +
       '<div class="dossier-top"><div><h2 id="dossier-title">' + esc(p.codename || p.title) + "</h2>" +
       (p.codename ? '<p class="bay-title">' + esc(p.title) + "</p>" : "") +
@@ -274,7 +295,7 @@
   /* ---------- arsenal: tools hanging on a pegboard ---------- */
   /* a honeycomb of modules; pointing at one loads it into the read-out panel */
   var CAPS = [], capsEl = $("caps");
-  Object.keys(D.skills).forEach(function (g) { D.skills[g].forEach(function (s) { CAPS.push({ name: s.name, cat: g, note: s.usedIn }); }); });
+  Object.keys(D.skills).forEach(function (g) { D.skills[g].forEach(function (s) { CAPS.push({ name: s.name, cat: g, note: s.usedIn, projects: s.projects }); }); });
   var pad2 = function (n) { return ("0" + n).slice(-2); };
   capsEl.innerHTML = CAPS.map(function (c, i) {
     return '<button class="hex" type="button" data-i="' + i + '" style="--i:' + i + '"><span>' + esc(c.name) + "</span><small>" + esc(c.cat) + "</small></button>";
@@ -289,8 +310,7 @@
     var c = CAPS[i], bars = "";
     for (var b = 0; b < 26; b++) bars += '<i style="--i:' + ((b * 7) % 11) + '"></i>';
     $("cap-read").innerHTML = '<p class="rd-cat">' + esc(c.cat) + '</p><p class="rd-name">' + esc(c.name) + '</p><p class="rd-note">' +
-      esc(c.note || "Module online.") + '</p><div class="rd-wave" aria-hidden="true">' + bars + '</div><p class="rd-idx">' + pad2(i + 1) + " / " + pad2(CAPS.length) + "</p>";
-    scramble($("cap-read").querySelector(".rd-name"));
+      esc(c.note || "") + "</p>" + projLinks(c.projects, "Used in") + '<div class="rd-wave" aria-hidden="true">' + bars + '</div><p class="rd-idx">' + pad2(i + 1) + " / " + pad2(CAPS.length) + "</p>";
     [].forEach.call(capsEl.children, function (h) { h.classList.toggle("on", +h.dataset.i === i); });
   }
   function pickCap(e) { var h = e.target.closest(".hex"); if (h && !h.classList.contains("dim")) showCap(+h.dataset.i); }
@@ -328,10 +348,10 @@
     achOn = i; var x = ACH[i];
     [].forEach.call($("vault-stack").children, function (el) { el.classList.toggle("on", +el.dataset.i === i); });
     [].forEach.call($("vault-list").querySelectorAll("button"), function (bt) { bt.setAttribute("aria-current", +bt.dataset.i === i); });
+    $("vault-count").textContent = pad2(i + 1) + " / " + pad2(ACH.length);
     $("vault-cap").innerHTML = '<p class="rd-cat">' + esc(x.issuer || "") + '</p><p class="vault-title">' + esc(x.title) + '</p><p class="vault-meta">' +
       [x.date ? "Issued " + esc(x.date) : "", x.id ? "Credential " + esc(x.id) : ""].filter(Boolean).join("<span></span>") +
-      '</p><a class="btn" href="' + esc(x.media) + '" target="_blank" rel="noopener">Open certificate</a>';
-    scramble($("vault-cap").querySelector(".vault-title"));
+      "</p>" + projLinks(x.projects, "Applied in") + '<a class="btn" href="' + esc(x.media) + '" target="_blank" rel="noopener">Open certificate</a>';
   }
   function takeOver(e) {
     if (achAuto) { clearInterval(achAuto); achAuto = null; }
@@ -340,6 +360,21 @@
   }
   ["pointerover", "focusin", "click"].forEach(function (ev) { $("vault-list").addEventListener(ev, takeOver); });
   $("vault").addEventListener("pointerdown", takeOver);
+  /* step through certificates without hunting in the list: arrows, swipe, arrow keys */
+  function stepAch(d) { takeOver(); showAch((achOn + d + ACH.length) % ACH.length); }
+  $("vault-prev").addEventListener("click", function () { stepAch(-1); });
+  $("vault-next").addEventListener("click", function () { stepAch(1); });
+  var swipeX = null;
+  $("vault-stack").addEventListener("pointerdown", function (e) { swipeX = e.clientX; });
+  addEventListener("pointerup", function (e) {
+    if (swipeX === null) return;
+    var dx = e.clientX - swipeX; swipeX = null;
+    if (Math.abs(dx) > 40) stepAch(dx < 0 ? 1 : -1);
+  });
+  $("vault").addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); stepAch(1); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); stepAch(-1); }
+  });
   showAch(0);
   if (!calm && ACH.length > 1) achAuto = setInterval(function () {
     var r = $("vault").getBoundingClientRect();
@@ -369,7 +404,7 @@
   })(0, 0, 1);
 
   /* ---------- giant outlined words that drift behind each section ---------- */
-  var GHOSTS = { about: "Origin", arsenal: "Arsenal", proof: "Proof", log: "Flight log", contact: "Transmit" }, ghosts = [];
+  var GHOSTS = { about: "About", arsenal: "Skills", proof: "Certified", log: "Experience", contact: "Contact" }, ghosts = [];
   Object.keys(GHOSTS).forEach(function (id) {
     var s = document.createElement("span");
     s.className = "ghost"; s.setAttribute("aria-hidden", "true"); s.textContent = GHOSTS[id];
@@ -378,7 +413,7 @@
   });
 
   /* ---------- cockpit read-outs: sector, depth, local time, position on the page ---------- */
-  var SECT = [["top", "Core"], ["about", "Origin"], ["builds", "Hangar"], ["arsenal", "Arsenal"], ["proof", "Proof"], ["log", "Log"], ["contact", "Transmit"]];
+  var SECT = [["top", "Home"], ["about", "About"], ["builds", "Projects"], ["arsenal", "Skills"], ["proof", "Certifications"], ["log", "Experience"], ["contact", "Contact"]];
   var rail = $("hud-rail"), mark = $("hud-mark");
   $("hud-place").textContent = o.coords || "";
   function clock() { $("hud-time").textContent = "Local " + new Date().toTimeString().slice(0, 8); }
@@ -405,12 +440,20 @@
   $("cv-btn").href = o.resume;
   function onScroll() {
     ticking = false;
-    if (!pdfsDrawn && $("vault").getBoundingClientRect().top < innerHeight * 1.8) { pdfsDrawn = true; drawPdfs(); }
-    var max = document.documentElement.scrollHeight - innerHeight;
-    bar.style.transform = "scaleX(" + (max > 0 ? scrollY / max : 0) + ")";
-    mark.style.top = (max > 0 ? scrollY / max : 0) * 100 + "%";
+    /* all measuring happens first, all style changes after: mixing the two forces the browser to re-lay
+       out the page several times per frame, which is what makes scrolling stutter */
+    var vh = innerHeight, sy = scrollY, max = document.documentElement.scrollHeight - vh;
+    var vaultTop = pdfsDrawn ? 0 : $("vault").getBoundingClientRect().top;
     var sector = SECT[0][1], secId = SECT[0][0];
-    SECT.forEach(function (s) { if ($(s[0]).getBoundingClientRect().top < innerHeight * 0.5) { sector = s[1]; secId = s[0]; } });
+    SECT.forEach(function (s) { if ($(s[0]).getBoundingClientRect().top < vh * 0.5) { sector = s[1]; secId = s[0]; } });
+    var ghostTops = ghosts.map(function (g) { return g.parentNode.getBoundingClientRect().top; });
+    var r = rack.getBoundingClientRect(), hangRect = hangar.getBoundingClientRect();
+    var reveal = [];
+    for (var i = rv.length - 1; i >= 0; i--) if (calm || rv[i].getBoundingClientRect().top < vh * 0.92) { reveal.push(rv[i]); rv.splice(i, 1); }
+    /* ---- writes ---- */
+    if (!pdfsDrawn && vaultTop < vh * 1.8) { pdfsDrawn = true; drawPdfs(); }
+    bar.style.transform = "scaleX(" + (max > 0 ? sy / max : 0) + ")";
+    mark.style.top = (max > 0 ? sy / max : 0) * 100 + "%";
     if (secId !== dockOn) {
       dockOn = secId;
       [].forEach.call(document.querySelectorAll(".dock a"), function (a) {
@@ -420,23 +463,14 @@
     }
     $("hud-sector").textContent = "Sector " + sector;
     $("hud-depth").textContent = "Depth " + ("000" + Math.round(scrollY / 30)).slice(-4) + " m";
-    ghosts.forEach(function (g) {
-      g.style.transform = "translateX(" + ((g.parentNode.getBoundingClientRect().top / innerHeight) * -16).toFixed(2) + "%)";
-    });
+    ghosts.forEach(function (g, gi) { g.style.transform = "translateX(" + ((ghostTops[gi] / vh) * -16).toFixed(2) + "%)"; });
     barGear.style.transform = "rotate(" + (scrollY * 0.4).toFixed(1) + "deg)";
     core.style.setProperty("--ex", calm ? 0 : clamp(scrollY / (innerHeight * 0.75), 0, 1).toFixed(3));
-    turnRing();
-    var r = rack.getBoundingClientRect();
-    var y = clamp((innerHeight * 0.55 - r.top) / r.height, 0, 1) * (r.height - PIN);
+    turnRing(hangRect);
+    var y = clamp((vh * 0.55 - r.top) / r.height, 0, 1) * (r.height - PIN);
     pinion.style.transform = "translateY(" + y.toFixed(1) + "px) rotate(" + (-y / PITCH_R).toFixed(3) + "rad)";
     /* things assemble as they enter the screen */
-    for (var i = rv.length - 1; i >= 0; i--) {
-      if (calm || rv[i].getBoundingClientRect().top < innerHeight * 0.92) {
-        var h = rv[i].matches("h2") ? rv[i] : rv[i].querySelector("h2");
-        if (h) scramble(h);
-        rv[i].classList.add("in"); rv.splice(i, 1);
-      }
-    }
+    reveal.forEach(function (el) { el.classList.add("in"); });
   }
 
   /* headings decode themselves from machine symbols into words */

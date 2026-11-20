@@ -10,7 +10,8 @@
   if (!c) return;
   var x = c.getContext("2d"), W, H, dpr = Math.min(window.devicePixelRatio || 1, 1.5), dirty = true;
   var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var embers = [], sparks = [], trail = [], blasts = [], running = true;
+  var embers = [], sparks = [], trail = [], blasts = [], running = true, idle = false;
+  function wake() { if (idle && running && !calm) { idle = false; requestAnimationFrame(draw); } }
 
   /* colours come from the current colour version */
   var css = getComputedStyle(document.documentElement);
@@ -50,6 +51,7 @@
   }
 
   function burst(px, py) {
+    wake();
     blasts.push({ x: px, y: py, t: 0 });
     var n = 90, lean = -Math.PI / 2 + (Math.random() - 0.5) * 0.9;      /* the shower leans one way, like a real grind */
     for (var i = 0; i < n; i++) {
@@ -66,7 +68,7 @@
     /* nothing to show: clear once, then do no work at all until something happens */
     if (!embers.length && !sparks.length && !trail.length && !blasts.length) {
       if (dirty) { x.clearRect(0, 0, W, H); dirty = false; }
-      if (running && !calm) requestAnimationFrame(draw);
+      idle = true;   /* stop the loop; wake() restarts it when there is something to draw */
       return;
     }
     dirty = true;
@@ -135,20 +137,20 @@
       }
       if (s.life <= 0) sparks.splice(k, 1);
     }
-    if (running && !calm) requestAnimationFrame(draw);
+    if (running && !calm) requestAnimationFrame(draw); else idle = true;
   }
   draw();
   if (calm) return;
 
   document.addEventListener("visibilitychange", function () {
     running = !document.hidden;
-    if (running) requestAnimationFrame(draw);
+    if (running) wake();
   });
 
   addEventListener("pointermove", function (e) {
-    if (e.pointerType === "mouse") { trail.push({ x: e.clientX, y: e.clientY, l: 1 }); if (trail.length > 60) trail.shift(); }
+    /* cursor ribbon retired after review: too busy */
   });
-  addEventListener("pointerdown", function (e) { burst(e.clientX, e.clientY); });
+  /* click sparks retired after review: they looked rough next to the 3D scene */
 
   /* targeting reticle, mouse devices only */
   var ret = document.getElementById("reticle");
@@ -159,10 +161,12 @@
       ret.classList.add("live");
       ret.classList.toggle("lock", !!e.target.closest("a, button, .node"));
     });
-    (function follow() {
+    var following = false;
+    function follow() {
       rx += (tx - rx) * 0.22; ry += (ty - ry) * 0.22;
       ret.style.transform = "translate(" + rx.toFixed(1) + "px," + ry.toFixed(1) + "px)";
-      requestAnimationFrame(follow);
-    })();
+      if (Math.abs(tx - rx) + Math.abs(ty - ry) > 0.3) requestAnimationFrame(follow); else following = false;
+    }
+    addEventListener("pointermove", function () { if (!following) { following = true; requestAnimationFrame(follow); } });
   }
 })();
